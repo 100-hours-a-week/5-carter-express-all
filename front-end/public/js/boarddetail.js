@@ -8,9 +8,12 @@ const inputComment = document.getElementById('inputComment');
 // const cinputComment = document.getElementById('cinputComment');
 
 function getPostIdFromURL() {
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    return urlParams.get('postId');
+    const url = window.location.href;
+    const postIdIndex = url.lastIndexOf('/:'); // postId가 위치하는 인덱스
+    if (postIdIndex !== -1) {
+        return url.substring(postIdIndex + 2); // postId를 가져옴
+    }
+    return null; // postId를 찾지 못한 경우
 }
 function transformLikes(number) {
     if (number >= 100000) {
@@ -77,10 +80,12 @@ function displayComments(replyData) {
 }
 document.addEventListener('DOMContentLoaded', function () {
     const postId = getPostIdFromURL();
-    fetch('data.json')
+    console.log(postId);
+    fetch('http://localhost:3001/posts')
         .then(response => response.json())
         .then(data => {
-            const postData = data.posts.find(post => post.postId == postId);
+            // console.log(data);
+            const postData = data.find(data => data.postId == postId);
             displayPostDetail(postData);
 
             if (postData) {
