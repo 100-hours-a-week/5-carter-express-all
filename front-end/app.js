@@ -1,0 +1,36 @@
+const express = require('express');
+const path = require('path');
+const app = express();
+
+app.use(express.static(path.join(__dirname + '/public')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'html', 'login.html'));
+});
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'html', 'signup.html'));
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'html', 'boarddetail.html'));
+});
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'html', 'boardmodify.html'));
+});
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'html', 'boardwrite.html'));
+});
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'html', 'infomodify.html'));
+});
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'html', 'board.html'));
+});
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'html', 'pwmodify.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
+});

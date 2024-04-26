@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="kr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" type="text/css" href="/css/board.css" />
+        <title>Board</title>
+    </head>
+    <body>
+        <header>
+            <div id="mainTitle">아무 말 대잔치</div>
+            <div class="dropdown">
+                <div class="dropbtn" onclick="toggleDropdown()">
+                    <img id="profileImage" src="/public/temp/beach.jpg" />
+                </div>
+                <div class="menu-box" id="menu-box">
+                    <ul class="menu-list">
+                        <li><a href="infomodify.html">회원정보 수정</a></li>
+                        <li>
+                            <a href="pwmodify.html">비밀번호 수정</a>
+                        </li>
+                        <li><a href="login.html">로그아웃</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr />
+        </header>
+        <main>
+            <br />
+            <p class="hello">
+                안녕하세요,<br />아무 말 대잔치 <b>게시판</b>입니다.
+            </p>
+            <div
+                id="writeButton"
+                onclick="window.location.href='boardwrite.html'"
+            >
+                게시글 작성
+            </div>
+            <div id="post-container" class="post-container"></div>
+        </main>
+        <script src="/js/board.js"></script>
+    </body>
+</html>
+
+<!-- <!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Fetch data.json</title>
+    </head>
+    <body>
+        <button id="getjson">data.json</button>
+        <div id="output"></div>
+
+        <script>
+            document
+                .getElementById('getjson')
+                .addEventListener('click', function () {
+                    fetch('http://localhost:3001/data.json')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            displayData(data.users);
+                        })
+                        .catch(error => {
+                            console.error(
+                                'There was a problem with the fetch operation:',
+                                error,
+                            );
+                        });
+                });
+
+            function displayData(data) {
+                var outputDiv = document.getElementById('output');
+                outputDiv.innerHTML = JSON.stringify(data, null, 2);
+            }
+        </script>
+    </body>
+</html> -->
