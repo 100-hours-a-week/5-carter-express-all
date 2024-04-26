@@ -139,8 +139,8 @@ Typescript/*
 Webpack/*
 
 # uploads, temp
-/uploads
-/temp
+uploads/
+temp/
 
 # data.json
 data.json
