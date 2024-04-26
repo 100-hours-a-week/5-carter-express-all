@@ -36,7 +36,6 @@ completeButton.addEventListener('click', function () {
     const content = document.getElementById('inputContent').value;
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
-    console.log('클릭');
     const formData = new FormData();
     formData.append('title', title);
     formData.append('content', content);
@@ -50,8 +49,6 @@ completeButton.addEventListener('click', function () {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            console.log(123);
-            console.log(response.json());
             return response.json();
         })
         // .then(data => {

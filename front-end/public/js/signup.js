@@ -31,19 +31,30 @@ signupButton.addEventListener('click', async function () {
     const email = document.getElementById('input-email').value;
     const nickname = document.getElementById('input-nickname').value;
     const password = document.getElementById('input-pw').value;
+    const file = document.getElementById('fileInput').files[0];
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('nickname', nickname);
+    formData.append('password', password);
+    formData.append('file', file);
 
-    const userData = {
-        email: email,
-        nickname: nickname,
-        password: password,
-    };
-    fetch('/users/signup', {
+    fetch('http://localhost:3001/users/signup', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-    });
+        body: formData,
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error(
+                'There was a problem with the fetch operation:',
+                error,
+            );
+        });
+    // window.location.href = 'login.html';
 });
 
 // 프로필 이미지 입력창
@@ -75,7 +86,6 @@ function checkDuplicateEmail(email) {
         fetch('http://localhost:3001/models/data.json')
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 const users = data.users;
                 const isDuplicate = users.some(user => user.email === email);
                 resolve(isDuplicate); // 중복 여부를 Promise로 반환
@@ -194,7 +204,7 @@ confirmPasswordInput.addEventListener('input', function () {
 // 닉네임
 function checkDuplicateNickname(nickname) {
     return new Promise((resolve, reject) => {
-        fetch('./data.json')
+        fetch('http://localhost:3001/models/data.json')
             .then(response => response.json())
             .then(data => {
                 const users = data.users;

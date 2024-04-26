@@ -106,6 +106,55 @@ app.get('/posts', (req, res) => {
     });
 });
 
+app.post('/users/signup', upload.single('file'), (req, res) => {
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.log('Error reading data.json file:', err);
+            return;
+        }
+        try {
+            jsonData = JSON.parse(data);
+            const userId = jsonData.users.length;
+            const newFileName = `user${userId}${path.extname(req.file.originalname)}`;
+            fs.rename(
+                uploadPath + req.file.originalname,
+                uploadPath + newFileName,
+                err => {
+                    if (err) {
+                        console.log('Error renaming file:', err);
+                        return;
+                    }
+                    console.log('File uploaded successfully');
+                    return;
+                },
+            );
+            const newUser = {
+                email: req.body.email,
+                nickname: req.body.nickname,
+                password: req.body.password,
+                userId: userId,
+                imagePath: newFileName,
+            };
+            jsonData.users.push(newUser);
+            fs.writeFile(
+                jsonFilePath,
+                JSON.stringify(jsonData, null, 2),
+                'utf8',
+                err => {
+                    if (err) {
+                        console.log('Error writing data.json file:', err);
+                        return;
+                    }
+                    console.log('New post added successfully');
+                    return;
+                },
+            );
+        } catch (error) {
+            console.log('error', error);
+            return;
+        }
+    });
+});
 // app.get('/posts', (req, res) => {});
 // app.get('/data.json', (req, res) => {
 //     console.log(123);
