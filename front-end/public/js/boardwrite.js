@@ -41,7 +41,7 @@ completeButton.addEventListener('click', function () {
     formData.append('content', content);
     formData.append('file', file);
 
-    fetch('http://localhost:3001/posts', {
+    fetch('http://localhost:3001/posts/register', {
         method: 'POST',
         body: formData,
     })

@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 const uploadPath = path.join(__dirname, 'uploads/');
-app.post('/posts', upload.single('file'), (req, res) => {
+app.post('/posts/register', upload.single('file'), (req, res) => {
     fs.readFile(jsonFilePath, 'utf8', (err, data) => {
         if (err) {
             console.log('Error reading data.json file:', err);
@@ -153,6 +153,22 @@ app.post('/users/signup', upload.single('file'), (req, res) => {
             console.log('error', error);
             return;
         }
+    });
+});
+
+app.post('/users/login', (req, res) => {
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        const users = JSON.parse(data).users;
+        const email = req.body.email;
+        const password = req.body.password;
+
+        for (let i = 0; i < users.length; i += 1) {
+            const user = users[i];
+            if (email === user.email && password === user.password) {
+                return res.status(200).json({ userId: user.userId });
+            }
+        }
+        return res.status(401).send('잘못된 이메일 또는 비밀번호입니다.');
     });
 });
 // app.get('/posts', (req, res) => {});
