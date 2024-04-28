@@ -100,9 +100,9 @@ function addUserId(event) {
 
     event.preventDefault();
 
-    var href = event.target.getAttribute('href');
+    const href = event.target.getAttribute('href');
 
-    var newUrl = href + '/' + userId;
+    const newUrl = href + '/:' + userId;
 
     window.location.href = newUrl;
 }

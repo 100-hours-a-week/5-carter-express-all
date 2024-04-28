@@ -1,14 +1,16 @@
+let userNickname;
+
 // 닉네임 입력창
 
 function checkDuplicateNickname(nickname) {
     return new Promise((resolve, reject) => {
-        fetch('./data.json')
+        fetch(`http://localhost:3001/users/isDuplicate/${nickname}`)
             .then(response => response.json())
             .then(data => {
-                const users = data.users;
-                const isDuplicate = users.some(
-                    user => user.nickname === nickname,
-                );
+                let isDuplicate = data.isDuplicate;
+                if (nickname === userNickname) {
+                    isDuplicate = false;
+                }
                 resolve(isDuplicate); // 중복 여부를 Promise로 반환
             })
             .catch(error => {
@@ -36,7 +38,6 @@ modifyButton.addEventListener('click', function () {
     const nicknameInput = document.getElementById('nicknameInput');
     const nicknameHelper = document.getElementById('nicknameHelper');
     nickname = nicknameInput.value;
-
     if (nickname === '') {
         nicknameHelper.textContent = '* 닉네임을 입력해주세요';
     } else if (nickname.length > 10) {
@@ -49,7 +50,17 @@ modifyButton.addEventListener('click', function () {
                     nicknameHelper.textContent = '* 중복된 닉네임입니다.';
                 } else {
                     nicknameHelper.textContent = '';
+                    const userId = getUserIdFromURL();
+                    const file = document.getElementById('fileInput').files[0];
+                    const formData = new FormData();
+                    formData.append('nickname', nickname);
+                    formData.append('file', file);
+                    fetch(`http://localhost:3001/users/${userId}`, {
+                        method: 'PATCH',
+                        body: formData,
+                    });
                     toast('수정완료');
+                    userNickname = nickname;
                 }
             })
             .catch(error => {
@@ -85,4 +96,60 @@ function toggleDropdown() {
     }
 }
 
-document.addEventListener('DOMContentLoaded',function())
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('menu-box').style.display = 'none';
+    const userId = getUserIdFromURL();
+    fetch('http://localhost:3001/users/' + userId + '/image')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            const profileImage = document.getElementById('profileImage');
+            const profileImageInput =
+                document.getElementById('profileImageInput');
+            profileImage.src = imageUrl;
+            profileImageInput.src = imageUrl;
+        });
+    fetch('http://localhost:3001/users/' + userId + '/nickname')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const nicknameInput = document.getElementById('nicknameInput');
+            nicknameInput.value = data.nickname;
+            userNickname = data.nickname;
+        });
+});
+function getUserIdFromURL() {
+    const url = window.location.href;
+    const userIdIndex = url.lastIndexOf('/:');
+    if (userIdIndex !== -1) {
+        return url.substring(userIdIndex + 2);
+    }
+    return null;
+}
+const fileInput = document.getElementById('fileInput');
+const fileButton = document.getElementById('fileButton');
+
+fileButton.addEventListener('click', function () {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', function () {
+    const selectedFile = fileInput.files[0];
+    if (selectedFile) {
+        const reader = new FileReader();
+        reader.onload = function () {
+            const imgElement = document.getElementById('profileImageInput');
+            imgElement.src = reader.result;
+        };
+        reader.readAsDataURL(selectedFile);
+    }
+});

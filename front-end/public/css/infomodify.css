@@ -98,7 +98,8 @@ main div {
     line-height: 17.9px;
     text-align: left;
 }
-#text6 {
+#fileButton {
+    position: absolute;
     width: 52px;
     height: 27px;
     line-height: 27px;
@@ -112,7 +113,7 @@ main div {
     font-size: 15px;
     font-weight: 700;
     line-height: 17.9px;
-    text-align: left;
+    text-align: center;
     color: #ffffff;
     border: 1px solid white;
     border-radius: 10px 10px 10px 10px;
@@ -192,13 +193,14 @@ main div {
     top: 693px;
     left: 783px;
     gap: 0px;
-    border-radius: 4px 0px 0px 0px;
+    border-radius: 10px 10px 10px 10px;
     opacity: 0px;
     background: #aca0eb;
     color: #ffffff;
     text-align: center;
     justify-content: center;
     line-height: 33px;
+    border: none;
 }
 
 #toast {
@@ -225,7 +227,7 @@ main div {
     opacity: 1;
     /* transform: translate(-50%, 0); */
 }
-#image1 {
+#profileImageInput {
     position: absolute;
     width: 149px;
     height: 149px;

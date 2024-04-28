@@ -11,7 +11,7 @@
             <div id="mainTitle">아무 말 대잔치</div>
             <div class="dropdown">
                 <div class="dropbtn" onclick="toggleDropdown()">
-                    <img id="profileImage" src="/public/temp/beach.jpg" />
+                    <img id="profileImage" src="" />
                 </div>
                 <div class="menu-box" id="menu-box">
                     <ul class="menu-list">
@@ -29,13 +29,19 @@
             <div id="text4">회원정보수정</div>
             <div id="text5">프로필사진*</div>
             <div class="container">
-                <img id="image1" src="images/bee-8490747_640.jpg" />
-                <div id="text6">변경</div>
+                <img id="profileImageInput" src="" />
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept="image/*"
+                    style="display: none"
+                />
+                <button id="fileButton">변경</button>
             </div>
             <div id="text7">이메일</div>
             <div id="text8">carter@gmail.com</div>
             <div id="text9">닉네임</div>
-            <input id="nicknameInput" placeholder="carter" />
+            <input id="nicknameInput" />
             <div id="nicknameHelper"></div>
             <button id="modifyButton">수정하기</button>
 

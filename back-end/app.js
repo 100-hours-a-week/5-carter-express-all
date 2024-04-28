@@ -195,6 +195,115 @@ app.get('/users/:userId/image', (req, res) => {
     });
 });
 
+app.get('/users/:userId/nickname', (req, res) => {
+    const userId = req.params.userId;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading data.json file:', err);
+            return res.sendStatus(500);
+        }
+        try {
+            const users = JSON.parse(data).users;
+            for (let i = 0; i < users.length; i += 1) {
+                const user = users[i];
+                if (user.userId == userId) {
+                    return res.status(200).json({ nickname: user.nickname });
+                }
+            }
+            res.sendStatus(404);
+        } catch (parseError) {
+            console.error('Error parsing data.json:', parseError);
+            return res.sendStatus(500);
+        }
+    });
+});
+app.get('/users/isDuplicate/:nickname', (req, res) => {
+    const nickname = req.params.nickname;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.log('Error reading data.json file:', err);
+            return res.sendStatus(500);
+        }
+        try {
+            jsonData = JSON.parse(data);
+            const users = jsonData.users;
+            const isDuplicate = users.some(user => user.nickname === nickname);
+            return res.status(200).json({ isDuplicate: isDuplicate });
+        } catch (err) {
+            return res.sendStatus(500);
+        }
+    });
+});
+
+app.patch('/users/:userId', upload.single('file'), (req, res) => {
+    const userId = req.params.userId;
+    const formData = req.body;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.log('Error reading data.json file:', err);
+            return res.sendStatus(500);
+        }
+        try {
+            jsonData = JSON.parse(data);
+            let newFileName;
+            if (req.file) {
+                newFileName = `user${userId}${path.extname(req.file.originalname)}`;
+                fs.rename(
+                    uploadPath + req.file.originalname,
+                    uploadPath + newFileName,
+                    err => {
+                        if (err) {
+                            console.log('Error renaming file:', err);
+                            return;
+                        }
+                        console.log('File uploaded successfully');
+                        return;
+                    },
+                );
+            }
+            const users = jsonData.users;
+            for (let i = 0; i < users.length; i += 1) {
+                let user = users[i];
+                // console.log(user.userId);
+                if (user.userId == userId) {
+                    if (req.file) {
+                        fs.rename(
+                            uploadPath + req.file.originalname,
+                            uploadPath + newFileName,
+                            err => {
+                                if (err) {
+                                    console.log('Error renaming file:', err);
+                                    return;
+                                }
+                                console.log('File uploaded successfully');
+                                return;
+                            },
+                        );
+                    } else {
+                        newFileName = users[i].imagePath;
+                    }
+                    jsonData.users[i].nickname = formData.nickname;
+                    jsonData.users[i].imagePath = newFileName;
+                }
+            }
+            fs.writeFile(
+                jsonFilePath,
+                JSON.stringify(jsonData, null, 2),
+                'utf8',
+                err => {
+                    if (err) {
+                        console.log('Error writing data.json file:', err);
+                        return;
+                    }
+                    console.log('Info modified successfully');
+                    return;
+                },
+            );
+        } catch (err) {
+            return res.sendStatus(500);
+        }
+    });
+});
 // app.get('/posts', (req, res) => {});
 // app.get('/data.json', (req, res) => {
 //     console.log(123);
