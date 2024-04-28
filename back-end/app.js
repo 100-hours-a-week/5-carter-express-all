@@ -235,7 +235,7 @@ app.get('/users/isDuplicate/:nickname', (req, res) => {
     });
 });
 
-app.patch('/users/:userId', upload.single('file'), (req, res) => {
+app.patch('/users/info/:userId', upload.single('file'), (req, res) => {
     const userId = req.params.userId;
     const formData = req.body;
     fs.readFile(jsonFilePath, 'utf8', (err, data) => {
@@ -316,13 +316,49 @@ app.delete('/users', (req, res) => {
             jsonData = JSON.parse(data);
             const users = jsonData.users;
             const userIndex = users.findIndex(user => user.userId == userId);
-            console.log(userIndex);
             if (userIndex === -1) {
                 return res
                     .status(404)
                     .json({ message: '해당 사용자를 찾을 수 없습니다.' });
             }
             jsonData.users.splice(userIndex, 1);
+            fs.writeFile(
+                jsonFilePath,
+                JSON.stringify(jsonData, null, 2),
+                'utf8',
+                err => {
+                    if (err) {
+                        console.log('Error writing data.json file:', err);
+                        return res.status(400).json({ message: 'failed' });
+                    }
+                    console.log('Info modified successfully');
+                    return res.status(200).json({ message: 'success' });
+                },
+            );
+        } catch (error) {
+            return res.status(400).json({ error: error });
+        }
+    });
+});
+
+app.patch('/users/pw', (req, res) => {
+    const userId = req.body.userId;
+    const password = req.body.password;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.log('Error reading data.json file:', err);
+            return res.sendStatus(500);
+        }
+        try {
+            jsonData = JSON.parse(data);
+            const users = jsonData.users;
+            const userIndex = users.findIndex(user => user.userId == userId);
+            if (userIndex === -1) {
+                return res
+                    .status(404)
+                    .json({ message: '해당 사용자를 찾을 수 없습니다.' });
+            }
+            jsonData.users[userIndex].password = password;
             fs.writeFile(
                 jsonFilePath,
                 JSON.stringify(jsonData, null, 2),

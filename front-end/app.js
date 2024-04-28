@@ -25,7 +25,7 @@ app.get('/html/infomodify/:userId', (req, res) => {
 app.get('/html/board/:userId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'board.html'));
 });
-app.get('/', (req, res) => {
+app.get('/html/pwmodify/:userId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'pwmodify.html'));
 });
 

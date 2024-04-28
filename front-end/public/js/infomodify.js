@@ -55,7 +55,7 @@ modifyButton.addEventListener('click', function () {
                     const formData = new FormData();
                     formData.append('nickname', nickname);
                     formData.append('file', file);
-                    fetch(`http://localhost:3001/users/${userId}`, {
+                    fetch(`http://localhost:3001/users/info/${userId}`, {
                         method: 'PATCH',
                         body: formData,
                     });

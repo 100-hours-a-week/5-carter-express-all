@@ -68,7 +68,6 @@ const passwordInput = document.getElementById('passwordInput');
 const confirmPasswordInput = document.getElementById('confirmInput');
 const passwordMessage = document.getElementById('passwordHelper');
 const confirmPasswordMessage = document.getElementById('confirmPasswordHelper');
-
 passwordInput.addEventListener('input', function () {
     const validationMessage = validatePassword(passwordInput.value);
     passwordMessage.textContent = validationMessage;
@@ -102,3 +101,44 @@ function toggleDropdown() {
         dropdownContent.style.display = 'none';
     }
 }
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('menu-box').style.display = 'none';
+    const userId = getUserIdFromURL();
+    fetch('http://localhost:3001/users/' + userId + '/image')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            const profileImage = document.getElementById('profileImage');
+            const profileImageInput =
+                document.getElementById('profileImageInput');
+            profileImage.src = imageUrl;
+        });
+});
+function getUserIdFromURL() {
+    const url = window.location.href;
+    const userIdIndex = url.lastIndexOf('/:');
+    if (userIdIndex !== -1) {
+        return url.substring(userIdIndex + 2);
+    }
+    return null;
+}
+
+modifyButton.addEventListener('click', function () {
+    const userId = getUserIdFromURL();
+    const passwordInput = document.getElementById('passwordInput');
+    const password = passwordInput.value;
+    const data = {
+        userId: userId,
+        password: password,
+    };
+    fetch('http://localhost:3001/users/pw', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+});
