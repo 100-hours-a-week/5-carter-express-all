@@ -54,7 +54,7 @@ signupButton.addEventListener('click', async function () {
                 error,
             );
         });
-    // window.location.href = 'login.html';
+    window.location.href = 'login.html';
 });
 
 // 프로필 이미지 입력창

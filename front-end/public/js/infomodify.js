@@ -84,3 +84,5 @@ function toggleDropdown() {
         dropdownContent.style.display = 'none';
     }
 }
+
+document.addEventListener('DOMContentLoaded',function())

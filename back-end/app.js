@@ -171,6 +171,30 @@ app.post('/users/login', (req, res) => {
         return res.status(401).send('잘못된 이메일 또는 비밀번호입니다.');
     });
 });
+
+app.get('/users/:userId/image', (req, res) => {
+    const userId = req.params.userId;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading data.json file:', err);
+            return res.sendStatus(500);
+        }
+        try {
+            const users = JSON.parse(data).users;
+            for (let i = 0; i < users.length; i += 1) {
+                const user = users[i];
+                if (user.userId == userId) {
+                    return res.sendFile(uploadPath + user.imagePath);
+                }
+            }
+            res.sendStatus(404);
+        } catch (parseError) {
+            console.error('Error parsing data.json:', parseError);
+            return res.sendStatus(500);
+        }
+    });
+});
+
 // app.get('/posts', (req, res) => {});
 // app.get('/data.json', (req, res) => {
 //     console.log(123);

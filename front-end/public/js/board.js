@@ -1,6 +1,20 @@
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('menu-box').style.display = 'none';
 
+    const userId = getUserIdFromURL();
+    fetch('http://localhost:3001/users/' + userId + '/image')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            const profileImage = document.getElementById('profileImage');
+            profileImage.src = imageUrl;
+        });
+
     fetch('http://localhost:3001/posts')
         .then(response => response.json())
         .then(data => {
@@ -8,6 +22,15 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error('Error fetching posts:', error));
 });
+
+function getUserIdFromURL() {
+    const url = window.location.href;
+    const userIdIndex = url.lastIndexOf('/:');
+    if (userIdIndex !== -1) {
+        return url.substring(userIdIndex + 2);
+    }
+    return null;
+}
 
 function toggleDropdown() {
     var dropdownContent = document.getElementById('menu-box');
@@ -42,11 +65,22 @@ function displayPosts(posts) {
         const timeId = `${index}time`;
         const hrId = `${index}hr`;
         const writerId = `${index}writer`;
-
+        // fetch('http://localhost:3001/users/' + userId + '/image')
+        //     .then(response => {
+        //         if (!response.ok) {
+        //             throw new Error('Network response was not ok');
+        //         }
+        //         return response.blob();
+        //     })
+        //     .then(blob => {
+        //         const imageUrl = URL.createObjectURL(blob);
+        //         const profileImage = document.getElementById('profileImage');
+        //         profileImage.src = imageUrl;
+        //     });
         post.likes = transformLikes(post.likes);
         post.comments = transformLikes(post.comments);
         post.views = transformLikes(post.views);
-
+        // console.log(profileImage);
         container.innerHTML = `
  <div class="title" id="${titleId}">${post.title}</div>
  <div class="like" id="${likeId}">좋아요 ${post.likes} 댓글 ${post.comments} 조회수 ${post.views}</div>
@@ -60,4 +94,15 @@ function displayPosts(posts) {
         });
         postContainer.appendChild(container);
     });
+}
+function addUserId(event) {
+    const userId = getUserIdFromURL();
+
+    event.preventDefault();
+
+    var href = event.target.getAttribute('href');
+
+    var newUrl = href + '/' + userId;
+
+    window.location.href = newUrl;
 }
