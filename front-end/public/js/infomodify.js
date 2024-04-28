@@ -83,8 +83,27 @@ modalCloseButton.addEventListener('click', () => {
 });
 const agreeButton = document.getElementById('agreeButton');
 agreeButton.addEventListener('click', function () {
-    //TODO:회원정보 삭제
-    window.location.href = 'login.html';
+    const userId = getUserIdFromURL();
+    fetch('http://localhost:3001/users/', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: userId }),
+    })
+        .then(function (response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            window.location.href = '/';
+            // return response.json();
+        })
+        .catch(function (error) {
+            console.error(
+                'There was a problem with the fetch operation:',
+                error,
+            );
+        });
 });
 
 function toggleDropdown() {
