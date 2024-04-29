@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(data => {
                 setTimeout(function () {
-                    window.location.href = `/html/board/:${data.userId}`;
+                    window.location.href = `/board/:${data.userId}`;
                 }, 3000);
             })
             .catch(error => {

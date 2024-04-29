@@ -26,7 +26,7 @@ function transformLikes(number) {
 }
 function displayPostDetail(post) {
     const postTitle = document.getElementById('postTitle');
-    // const userProfile = document.getElementById('userProfile');
+    const userProfile = document.getElementById('userProfile');
     const userName = document.getElementById('userName');
     const postDate = document.getElementById('postDate');
     const postImageSrc = document.getElementById('postImageSrc');
@@ -34,12 +34,31 @@ function displayPostDetail(post) {
     const views = document.getElementById('views');
     const comments = document.getElementById('comments');
     postTitle.textContent = post.title.slice(0, 26);
-    userName.textContent = post.author;
     postDate.textContent = post.date;
-    postImageSrc.src = post.image;
     postContent.textContent = post.content;
     views.textContent = transformLikes(post.views);
     comments.textContent = transformLikes(post.comments);
+    fetch('http://localhost:3001/users/' + post.userId + '/image')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            userProfile.src = imageUrl;
+        });
+    fetch('http://localhost:3001/users/' + post.userId + '/nickname')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            userName.textContent = data.nickname;
+        });
 }
 function displayComments(replyData) {
     const postContainer = document.getElementById('commentContainer');
@@ -108,6 +127,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
         .catch(error => console.error('Error fetching data:', error));
+
+    fetch('http://localhost:3001/posts/' + postId + '/image')
+        .then(response => response.blob())
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            const postImageSrc = document.getElementById('postImageSrc');
+            postImageSrc.src = imageUrl;
+        });
 });
 
 modalOpenButton.addEventListener('click', () => {
@@ -118,8 +145,26 @@ modalCloseButton.addEventListener('click', () => {
 });
 const agreeButton = document.getElementById('agreeButton');
 agreeButton.addEventListener('click', function () {
-    //TODO:게시글 정보 삭제
-    window.location.href = 'board.html';
+    const { userId, postId } = getUserAndPostIdFromUrl();
+    fetch('http://localhost:3001/posts/', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ postId: postId }),
+    })
+        .then(function (response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            window.location.href = `/board/:${userId}`;
+        })
+        .catch(function (error) {
+            console.error(
+                'There was a problem with the fetch operation:',
+                error,
+            );
+        });
 });
 
 // cmodalOpenButton.addEventListener('click', () => {

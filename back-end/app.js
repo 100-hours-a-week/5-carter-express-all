@@ -108,6 +108,25 @@ app.get('/posts', (req, res) => {
     });
 });
 
+app.get('/posts/:postId/image', (req, res) => {
+    const postId = req.params.postId;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.log('Error reading data.json file:', err);
+            return;
+        }
+        try {
+            const posts = JSON.parse(data).posts;
+            const postIndex = posts.findIndex(post => post.postId == postId);
+            const imagePath = posts[postIndex].image;
+            return res.sendFile(uploadPath + imagePath);
+        } catch (parseError) {
+            console.error('Error parsing data.json:', parseError);
+            return res.sendStatus(500);
+        }
+    });
+});
+
 app.post('/users/signup', upload.single('file'), (req, res) => {
     fs.readFile(jsonFilePath, 'utf8', (err, data) => {
         if (err) {
@@ -326,6 +345,42 @@ app.delete('/users', (req, res) => {
                     .json({ message: '해당 사용자를 찾을 수 없습니다.' });
             }
             jsonData.users.splice(userIndex, 1);
+            fs.writeFile(
+                jsonFilePath,
+                JSON.stringify(jsonData, null, 2),
+                'utf8',
+                err => {
+                    if (err) {
+                        console.log('Error writing data.json file:', err);
+                        return res.status(400).json({ message: 'failed' });
+                    }
+                    console.log('Info modified successfully');
+                    return res.status(200).json({ message: 'success' });
+                },
+            );
+        } catch (error) {
+            return res.status(400).json({ error: error });
+        }
+    });
+});
+
+app.delete('/posts', (req, res) => {
+    const postId = req.body.postId;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.log('Error reading data.json file:', err);
+            return res.sendStatus(500);
+        }
+        try {
+            jsonData = JSON.parse(data);
+            const posts = jsonData.posts;
+            const postIndex = posts.findIndex(post => post.postId == postId);
+            if (postIndex === -1) {
+                return res
+                    .status(404)
+                    .json({ message: '해당 사용자를 찾을 수 없습니다.' });
+            }
+            jsonData.posts.splice(postIndex, 1);
             fs.writeFile(
                 jsonFilePath,
                 JSON.stringify(jsonData, null, 2),
