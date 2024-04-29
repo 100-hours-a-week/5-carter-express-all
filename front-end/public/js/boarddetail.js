@@ -179,8 +179,8 @@ agreeButton.addEventListener('click', function () {
 //     window.location.href = 'board.html';
 // });
 postModifyButton.addEventListener('click', function () {
-    const postId = getPostIdFromURL();
-    window.location.href = `boardmodify.html?postId=${postId}`;
+    const { userId, postId } = getUserAndPostIdFromUrl();
+    window.location.href = `/boardmodify/${userId}/${postId}`;
 });
 function toggleDropdown() {
     var dropdownContent = document.getElementById('menu-box');

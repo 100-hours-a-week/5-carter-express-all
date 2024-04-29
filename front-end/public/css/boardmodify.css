@@ -179,9 +179,9 @@ hr {
     line-height: 17.9px;
     text-align: left;
 }
-#text7 {
+#existingFileName {
     position: absolute;
-    width: 68px;
+    width: 268px;
     height: 17px;
     top: 711px;
     left: 769px;
@@ -218,7 +218,7 @@ hr {
     left: 664px;
     width: 592px;
 }
-#button1 {
+#fileInput {
     position: absolute;
     width: 68px;
     height: 29px;

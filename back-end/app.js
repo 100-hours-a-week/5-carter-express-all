@@ -436,6 +436,63 @@ app.patch('/users/pw', (req, res) => {
         }
     });
 });
+
+app.patch('/posts', upload.single('file'), (req, res) => {
+    const postId = req.body.postId;
+    const title = req.body.title;
+    const content = req.body.content;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.log('Error reading data.json file:', err);
+            return res.sendStatus(500);
+        }
+        try {
+            jsonData = JSON.parse(data);
+            const posts = jsonData.posts;
+            const postIndex = posts.findIndex(post => post.postId == postId);
+            if (postIndex === -1) {
+                return res
+                    .status(404)
+                    .json({ message: '해당 사용자를 찾을 수 없습니다.' });
+            }
+            let newFileName = jsonData.posts[postIndex].image;
+            if (req.file) {
+                newFileName = `post${postId}${path.extname(req.file.originalname)}`;
+                fs.rename(
+                    uploadPath + req.file.originalname,
+                    uploadPath + newFileName,
+                    err => {
+                        if (err) {
+                            console.log('Error renaming file:', err);
+                            return;
+                        }
+                        console.log('File uploaded successfully');
+                        return;
+                    },
+                );
+            }
+            jsonData.posts[postIndex].title = title;
+            jsonData.posts[postIndex].content = content;
+            jsonData.posts[postIndex].title = title;
+            jsonData.posts[postIndex].imagePath = newFileName;
+            fs.writeFile(
+                jsonFilePath,
+                JSON.stringify(jsonData, null, 2),
+                'utf8',
+                err => {
+                    if (err) {
+                        console.log('Error writing data.json file:', err);
+                        return res.status(400).json({ message: 'failed' });
+                    }
+                    console.log('Info modified successfully');
+                    return res.status(200).json({ message: 'success' });
+                },
+            );
+        } catch (err) {
+            return res.status(400);
+        }
+    });
+});
 // app.get('/posts', (req, res) => {});
 // app.get('/data.json', (req, res) => {
 //     console.log(123);
