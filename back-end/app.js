@@ -33,7 +33,9 @@ app.post('/posts/register', upload.single('file'), (req, res) => {
         }
         try {
             jsonData = JSON.parse(data);
-            const postId = jsonData.posts.length;
+            const postId = jsonData.posts.reduce((max, post) => {
+                return Math.max(max, post.postId) + 1;
+            }, 0);
 
             let newFileName = null;
             if (req.file) {
@@ -114,7 +116,9 @@ app.post('/users/signup', upload.single('file'), (req, res) => {
         }
         try {
             jsonData = JSON.parse(data);
-            const userId = jsonData.users.length;
+            const userId = jsonData.users.reduce((max, user) => {
+                return Math.max(max, user.userId) + 1;
+            }, 0);
             const newFileName = `user${userId}${path.extname(req.file.originalname)}`;
             fs.rename(
                 uploadPath + req.file.originalname,

@@ -89,7 +89,8 @@ function displayPosts(posts) {
  <div class="author" id="${writerId}">${post.author}</div>
 `;
         container.addEventListener('click', function () {
-            window.location.href = `boarddetail/:${container.postId}`;
+            const userId = getUserIdFromURL();
+            window.location.href = `http://localhost:3000/board/detail/:${userId}/:${container.postId}`;
             // console.log(container.postId);
         });
         postContainer.appendChild(container);

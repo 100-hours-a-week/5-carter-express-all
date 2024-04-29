@@ -79,12 +79,23 @@ function displayComments(replyData) {
     });
 }
 document.addEventListener('DOMContentLoaded', function () {
-    const postId = getPostIdFromURL();
-    console.log(postId);
+    const { userId, postId } = getUserAndPostIdFromUrl();
+    fetch('http://localhost:3001/users/' + userId + '/image')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            const profileImage = document.getElementById('profileImage');
+            profileImage.src = imageUrl;
+        });
+
     fetch('http://localhost:3001/posts')
         .then(response => response.json())
         .then(data => {
-            // console.log(data);
             const postData = data.find(data => data.postId == postId);
             displayPostDetail(postData);
 
@@ -133,4 +144,12 @@ function toggleDropdown() {
     } else {
         dropdownContent.style.display = 'none';
     }
+}
+function getUserAndPostIdFromUrl() {
+    const url = window.location.href;
+    const startIndex = url.indexOf('/board/detail/') + '/board/detail/'.length;
+    const endIndex = url.indexOf('/', startIndex);
+    const userId = url.slice(startIndex + 1, endIndex);
+    const postId = url.slice(endIndex + 2);
+    return { userId, postId };
 }

@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'signup.html'));
 });
-app.get('html/boarddetail/:postId', (req, res) => {
+app.get('/board/detail/:userId/:postId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'boarddetail.html'));
 });
 app.get('/', (req, res) => {
