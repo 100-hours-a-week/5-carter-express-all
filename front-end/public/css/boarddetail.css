@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
 
 * {
-    background-color: #f4f5f7; /* 여기에 원하는 배경색을 지정하세요 */
+    background-color: #f4f5f7;
 }
 header {
     margin-top: 40px;
@@ -304,18 +304,20 @@ header {
     display: none;
 }
 #delete-title {
+    background-color: white;
     margin-top: 40px;
     font-family: Pretendard;
     font-size: 24px;
     font-weight: 700;
     line-height: 28.64px;
     text-align: center;
-
     display: flex;
     justify-content: center;
     align-items: center;
 }
 #delete-content {
+    background-color: white;
+
     margin-top: 30px;
     font-family: Pretendard;
     font-size: 20px;
@@ -327,6 +329,8 @@ header {
     align-items: center;
 }
 .button-container {
+    background-color: white;
+
     display: flex;
     justify-content: center;
     align-items: center;

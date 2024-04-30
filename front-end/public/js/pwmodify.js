@@ -142,3 +142,10 @@ modifyButton.addEventListener('click', function () {
         body: JSON.stringify(data),
     });
 });
+function addUserId(event) {
+    const userId = getUserIdFromURL();
+    event.preventDefault();
+    const href = event.target.getAttribute('href');
+    const newUrl = href + '/:' + userId;
+    window.location.href = newUrl;
+}

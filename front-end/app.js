@@ -16,16 +16,16 @@ app.get('/board/detail/:userId/:postId', (req, res) => {
 app.get('/boardmodify/:userId/:postId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'boardmodify.html'));
 });
-app.get('/', (req, res) => {
+app.get('/boardwrite/:userId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'boardwrite.html'));
 });
-app.get('/html/infomodify/:userId', (req, res) => {
+app.get('/infomodify/:userId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'infomodify.html'));
 });
 app.get('/board/:userId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'board.html'));
 });
-app.get('/html/pwmodify/:userId', (req, res) => {
+app.get('/pwmodify/:userId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'pwmodify.html'));
 });
 

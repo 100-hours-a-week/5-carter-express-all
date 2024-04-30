@@ -32,6 +32,7 @@ inputContent.addEventListener('input', function () {
 });
 
 completeButton.addEventListener('click', function () {
+    const userId = getUserIdFromURL();
     const title = document.getElementById('inputTitle').value;
     const content = document.getElementById('inputContent').value;
     const fileInput = document.getElementById('fileInput');
@@ -40,7 +41,7 @@ completeButton.addEventListener('click', function () {
     formData.append('title', title);
     formData.append('content', content);
     formData.append('file', file);
-
+    formData.append('userId', userId);
     fetch('http://localhost:3001/posts/register', {
         method: 'POST',
         body: formData,
@@ -64,7 +65,7 @@ completeButton.addEventListener('click', function () {
             // 오류 발생시 처리
             // 예: 사용자에게 오류 메시지를 표시합니다.
         });
-    window.location.href = 'board.html';
+    window.location.href = `/board/:${userId}`;
 });
 function toggleDropdown() {
     var dropdownContent = document.getElementById('menu-box');
@@ -82,3 +83,18 @@ fileInput.addEventListener('change', function () {
     const fileName = this.files[0].name;
     fileNameDisplay.textContent = fileName;
 });
+function getUserIdFromURL() {
+    const url = window.location.href;
+    const userIdIndex = url.lastIndexOf('/:');
+    if (userIdIndex !== -1) {
+        return url.substring(userIdIndex + 2);
+    }
+    return null;
+}
+function addUserId(event) {
+    const userId = getUserIdFromURL();
+    event.preventDefault();
+    const href = event.target.getAttribute('href');
+    const newUrl = href + '/:' + userId;
+    window.location.href = newUrl;
+}

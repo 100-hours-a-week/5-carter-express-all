@@ -65,22 +65,10 @@ function displayPosts(posts) {
         const timeId = `${index}time`;
         const hrId = `${index}hr`;
         const writerId = `${index}writer`;
-        // fetch('http://localhost:3001/users/' + userId + '/image')
-        //     .then(response => {
-        //         if (!response.ok) {
-        //             throw new Error('Network response was not ok');
-        //         }
-        //         return response.blob();
-        //     })
-        //     .then(blob => {
-        //         const imageUrl = URL.createObjectURL(blob);
-        //         const profileImage = document.getElementById('profileImage');
-        //         profileImage.src = imageUrl;
-        //     });
+
         post.likes = transformLikes(post.likes);
         post.comments = transformLikes(post.comments);
         post.views = transformLikes(post.views);
-        // console.log(profileImage);
         container.innerHTML = `
  <div class="title" id="${titleId}">${post.title}</div>
  <div class="like" id="${likeId}">좋아요 ${post.likes} 댓글 ${post.comments} 조회수 ${post.views}</div>
@@ -91,19 +79,20 @@ function displayPosts(posts) {
         container.addEventListener('click', function () {
             const userId = getUserIdFromURL();
             window.location.href = `http://localhost:3000/board/detail/:${userId}/:${container.postId}`;
-            // console.log(container.postId);
         });
         postContainer.appendChild(container);
     });
 }
 function addUserId(event) {
     const userId = getUserIdFromURL();
-
     event.preventDefault();
-
     const href = event.target.getAttribute('href');
-
     const newUrl = href + '/:' + userId;
-
     window.location.href = newUrl;
 }
+
+const writeButton = document.getElementById('writeButton');
+writeButton.addEventListener('click', function () {
+    const userId = getUserIdFromURL();
+    window.location.href = `/boardwrite/:${userId}`;
+});

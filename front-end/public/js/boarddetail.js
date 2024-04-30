@@ -254,7 +254,7 @@ submitCommentButton.addEventListener('click', async function () {
 
 postModifyButton.addEventListener('click', function () {
     const { userId, postId } = getUserAndPostIdFromUrl();
-    window.location.href = `/boardmodify/${userId}/${postId}`;
+    window.location.href = `/boardmodify/:${userId}/:${postId}`;
 });
 function toggleDropdown() {
     var dropdownContent = document.getElementById('menu-box');
@@ -271,4 +271,11 @@ function getUserAndPostIdFromUrl() {
     const userId = url.slice(startIndex + 1, endIndex);
     const postId = url.slice(endIndex + 2);
     return { userId, postId };
+}
+function addUserId(event) {
+    const { userId, postId } = getUserAndPostIdFromUrl();
+    event.preventDefault();
+    const href = event.target.getAttribute('href');
+    const newUrl = href + '/:' + userId;
+    window.location.href = newUrl;
 }

@@ -4,6 +4,7 @@ const helperText = document.getElementById('helperText');
 document.addEventListener('DOMContentLoaded', function () {
     completeButton.disabled = true;
     const { userId, postId } = getUserAndPostIdFromUrl();
+    console.log(userId, postId);
     fetch('http://localhost:3001/users/' + userId + '/image')
         .then(response => {
             if (!response.ok) {
@@ -20,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(response => response.json())
         .then(posts => {
             const postData = posts.find(post => post.postId == postId);
-            // console.log(postData);
             const inputTitle = document.getElementById('inputTitle');
             const inputContent = document.getElementById('inputContent');
             inputTitle.value = postData.title;
@@ -48,9 +48,6 @@ inputTitle.addEventListener('input', function () {
 inputContent.addEventListener('input', function () {
     checkTitleContent();
 });
-// cButton.addEventListener('click', function () {
-//     window.location.href = 'boarddetail.html';
-// });
 function toggleDropdown() {
     var dropdownContent = document.getElementById('menu-box');
     if (dropdownContent.style.display === 'none') {
@@ -61,9 +58,10 @@ function toggleDropdown() {
 }
 function getUserAndPostIdFromUrl() {
     const url = window.location.href;
-    const parts = url.split('/');
-    const userId = parts[parts.length - 2];
-    const postId = parts[parts.length - 1];
+    const startIndex = url.indexOf('/boardmodify/') + '/boardmodify/'.length;
+    const endIndex = url.indexOf('/', startIndex);
+    const userId = url.slice(startIndex + 1, endIndex);
+    const postId = url.slice(endIndex + 2);
     return { userId, postId };
 }
 const fileInput = document.getElementById('fileInput');
@@ -91,3 +89,10 @@ completeButton.addEventListener('click', function () {
     });
     window.location.href = `/board/detail/:${userId}/:${postId}`;
 });
+function addUserId(event) {
+    const { userId, postId } = getUserAndPostIdFromUrl();
+    event.preventDefault();
+    const href = event.target.getAttribute('href');
+    const newUrl = href + '/:' + userId;
+    window.location.href = newUrl;
+}

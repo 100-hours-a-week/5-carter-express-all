@@ -61,7 +61,7 @@ app.post('/posts/register', upload.single('file'), (req, res) => {
                 likes: 0,
                 comments: 0,
                 views: 0,
-                author: 'carter',
+                userId: req.body.userId,
                 image: newFileName,
                 content: req.body.content,
                 reply: [],
