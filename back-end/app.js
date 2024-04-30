@@ -53,18 +53,11 @@ app.post('/posts/register', upload.single('file'), (req, res) => {
                     },
                 );
             }
-            const currentDate = new Date();
-            const year = currentDate.getFullYear();
-            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-            const day = String(currentDate.getDate()).padStart(2, '0');
-            const hours = String(currentDate.getHours()).padStart(2, '0');
-            const minutes = String(currentDate.getMinutes()).padStart(2, '0');
-            const seconds = String(currentDate.getSeconds()).padStart(2, '0');
-            const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
             const newPost = {
                 postId: postId,
                 title: req.body.title,
-                date: formattedDate,
+                date: getDate(),
                 likes: 0,
                 comments: 0,
                 views: 0,
@@ -192,6 +185,81 @@ app.post('/users/login', (req, res) => {
             }
         }
         return res.status(401).send('잘못된 이메일 또는 비밀번호입니다.');
+    });
+});
+
+app.get('/posts/:postId/comment', (req, res) => {
+    const postId = req.params.postId;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        const jsonData = JSON.parse(data);
+        const postIndex = jsonData.posts.findIndex(
+            post => post.postId == postId,
+        );
+        return res.json(jsonData.posts[postIndex].reply);
+    });
+});
+
+app.post('/posts/comment', (req, res) => {
+    const { postId, userId, content } = req.body;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        const jsonData = JSON.parse(data);
+        const postIndex = jsonData.posts.findIndex(
+            post => post.postId == postId,
+        );
+        const commentId = jsonData.posts[postIndex].reply.reduce(
+            (max, reply) => {
+                return Math.max(max, reply.commentId) + 1;
+            },
+            0,
+        );
+        const newComment = {
+            commentId: commentId,
+            userId: parseInt(userId),
+            date: getDate(),
+            content: content,
+        };
+        jsonData.posts[postIndex].reply.push(newComment);
+        fs.writeFile(
+            jsonFilePath,
+            JSON.stringify(jsonData, null, 2),
+            'utf8',
+            err => {
+                if (err) {
+                    console.log('Error writing data.json file:', err);
+                    return;
+                }
+                console.log('New post added successfully');
+                return;
+            },
+        );
+    });
+});
+
+app.patch('/posts/comment', (req, res) => {
+    const { content, commentId, postId } = req.body;
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        const jsonData = JSON.parse(data);
+        const postIndex = jsonData.posts.findIndex(
+            post => post.postId == postId,
+        );
+        const commentIndex = jsonData.posts[postIndex].reply.findIndex(
+            rep => rep.commentId == commentId,
+        );
+        jsonData.posts[postIndex].reply[commentIndex].content = content;
+        jsonData.posts[postIndex].reply[commentIndex].date = getDate();
+        fs.writeFile(
+            jsonFilePath,
+            JSON.stringify(jsonData, null, 2),
+            'utf8',
+            err => {
+                if (err) {
+                    console.log('Error writing data.json file:', err);
+                    return;
+                }
+                console.log('New post added successfully');
+                return;
+            },
+        );
     });
 });
 
@@ -400,6 +468,42 @@ app.delete('/posts', (req, res) => {
     });
 });
 
+app.delete('/posts/comment', (req, res) => {
+    const { commentId, postId } = req.body;
+    console.log(postId, commentId);
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.log('Error reading data.json file:', err);
+            return res.sendStatus(500);
+        }
+        try {
+            jsonData = JSON.parse(data);
+            const postIndex = jsonData.posts.findIndex(
+                post => post.postId == postId,
+            );
+            const commentIndex = jsonData.posts[postIndex].reply.findIndex(
+                reply => reply.commentId == commentId,
+            );
+            jsonData.posts[postIndex].reply.splice(commentIndex, 1);
+            fs.writeFile(
+                jsonFilePath,
+                JSON.stringify(jsonData, null, 2),
+                'utf8',
+                err => {
+                    if (err) {
+                        console.log('Error writing data.json file:', err);
+                        return res.status(400).json({ message: 'failed' });
+                    }
+                    console.log('Info modified successfully');
+                    return res.status(200).json({ message: 'success' });
+                },
+            );
+        } catch (err) {
+            return res.status(400);
+        }
+    });
+});
+
 app.patch('/users/pw', (req, res) => {
     const userId = req.body.userId;
     const password = req.body.password;
@@ -550,3 +654,13 @@ app.patch('/posts', upload.single('file'), (req, res) => {
 //         );
 //     });
 // });
+function getDate() {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    const hours = String(currentDate.getHours()).padStart(2, '0');
+    const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+    const seconds = String(currentDate.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}

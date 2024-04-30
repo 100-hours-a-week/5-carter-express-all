@@ -113,7 +113,9 @@ header {
     text-align: right;
     margin-right: 210px;
 }
-.smallButton {
+.smallButton,
+.cmodalOpenButton,
+.replyEdit {
     width: 44px;
     height: 28px;
     gap: 0px;
@@ -197,6 +199,7 @@ header {
 }
 #commentInput {
     height: 80px;
+    width: 525px;
     padding: 20px;
     border: 0.1px solid;
     border-radius: 10px 10px 0px 0px;
@@ -228,7 +231,12 @@ header {
     margin-top: 10px;
     margin-bottom: 10px;
 }
+.replyImage {
+    width: 36px;
+    height: 36px;
+}
 .replyNickname {
+    margin-left: 5px;
     font-family: Pretendard;
     font-size: 15px;
     font-weight: 700;
@@ -246,19 +254,21 @@ header {
     margin-left: 20px;
 }
 .replyDate {
+    width: 160px;
     height: 18px;
     font-family: Pretendard;
     font-size: 14px;
     font-weight: 400;
     line-height: 18.2px;
     text-align: right;
+    margin-top: 10px;
 }
-#replyEdit {
+.replyEdit {
     width: 55px;
-    margin-left: 225px;
+    margin-left: 145px;
     margin-top: 3px;
 }
-#cmodalOpenButton {
+.cmodalOpenButton {
     margin-top: 3px;
     margin-left: 10px;
     width: 55px;
@@ -267,7 +277,8 @@ header {
 #modalCloseButton {
     cursor: pointer;
 }
-#modalContainer {
+#modalContainer,
+#cmodalContainer {
     width: 100%;
     height: 100%;
     position: absolute;
@@ -278,7 +289,8 @@ header {
     align-items: center;
     background: rgba(0, 0, 0, 0.5);
 }
-#modalContent {
+#modalContent,
+#cmodalContent {
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
@@ -287,7 +299,8 @@ header {
     padding: 15px;
     z-index: 1000;
 }
-#modalContainer.hidden {
+#modalContainer.hidden,
+#cmodalContainer.hidden {
     display: none;
 }
 #delete-title {
@@ -324,7 +337,8 @@ header {
     margin-right: 10px;
     margin_top: 50px;
 }
-#modalCloseButton {
+#modalCloseButton,
+#cmodalCloseButton {
     width: 127px;
     height: 44px;
     gap: 0px;
@@ -338,7 +352,8 @@ header {
     background-color: black;
     color: #ffffff;
 }
-#agreeButton {
+#agreeButton,
+#cagreeButton {
     width: 127px;
     height: 44px;
     gap: 0px;

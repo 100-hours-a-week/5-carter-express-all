@@ -67,11 +67,23 @@
         </div>
         <div id="writeCommentContainer">
             <hr />
-            <div id="commentInput">댓글을 남겨주세요!</div>
+            <textarea
+                id="commentInput"
+                placeholder="댓글을 남겨주세요!"
+            ></textarea>
             <button id="submitComment">댓글 등록</button>
         </div>
         <div id="commentContainer" class="commentContainer"></div>
-
+        <div id="cmodalContainer" class="hidden">
+            <div id="cmodalContent">
+                <div id="delete-title">댓글을 삭제하시겠습니까?</div>
+                <div id="delete-content">삭제한 내용은 복구할 수 없습니다.</div>
+                <div class="button-container">
+                    <button id="cmodalCloseButton">취소</button>
+                    <button id="cagreeButton">확인</button>
+                </div>
+            </div>
+        </div>
         <script src="/js/boarddetail.js"></script>
     </body>
 </html>
