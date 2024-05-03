@@ -57,7 +57,6 @@ signupButton.addEventListener('click', async function () {
     window.location.href = 'login.html';
 });
 
-// 프로필 이미지 입력창
 document.getElementById('uploadButton').addEventListener('click', function () {
     document.getElementById('fileInput').click();
 });
@@ -80,7 +79,6 @@ document.getElementById('fileInput').addEventListener('change', function () {
     checkMessages();
 });
 
-//이메일 입력창
 function checkDuplicateEmail(email) {
     return new Promise((resolve, reject) => {
         fetch('http://localhost:3001/models/data.json')
@@ -88,10 +86,10 @@ function checkDuplicateEmail(email) {
             .then(data => {
                 const users = data.users;
                 const isDuplicate = users.some(user => user.email === email);
-                resolve(isDuplicate); // 중복 여부를 Promise로 반환
+                resolve(isDuplicate);
             })
             .catch(error => {
-                reject(error); // 오류 발생 시 reject 처리
+                reject(error);
             });
     });
 }
@@ -101,12 +99,10 @@ function validateEmail(email) {
 }
 
 document.addEventListener('click', function (event) {
-    // const emailInput = document.getElementById('input-email');
     const isClickedOutside = !emailInput.contains(event.target);
     if (isClickedOutside) {
         const email = emailInput.value;
 
-        // 중복 이메일 확인 비동기 처리
         checkDuplicateEmail(email)
             .then(isDuplicate => {
                 if (isDuplicate) {
@@ -129,8 +125,6 @@ document.addEventListener('click', function (event) {
     }
     checkMessages();
 });
-
-// 비밀번호, 비밀번호 확인 입력창
 
 function validatePassword(password) {
     if (password === '') {
@@ -173,7 +167,6 @@ function validatePasswordMatch() {
     return '';
 }
 
-// const passwordInput = document.getElementById('input-pw');
 const confirmPasswordInput = document.getElementById('confirm-pw');
 const passwordMessage = document.getElementById('passwordHelper');
 const confirmPasswordMessage = document.getElementById('confirmPasswordHelper');
@@ -201,7 +194,6 @@ confirmPasswordInput.addEventListener('input', function () {
     checkMessages();
 });
 
-// 닉네임
 function checkDuplicateNickname(nickname) {
     return new Promise((resolve, reject) => {
         fetch('http://localhost:3001/models/data.json')
@@ -211,10 +203,10 @@ function checkDuplicateNickname(nickname) {
                 const isDuplicate = users.some(
                     user => user.nickname === nickname,
                 );
-                resolve(isDuplicate); // 중복 여부를 Promise로 반환
+                resolve(isDuplicate);
             })
             .catch(error => {
-                reject(error); // 오류 발생 시 reject 처리
+                reject(error);
             });
     });
 }

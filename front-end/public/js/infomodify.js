@@ -1,7 +1,5 @@
 let userNickname;
 
-// 닉네임 입력창
-
 function checkDuplicateNickname(nickname) {
     return new Promise((resolve, reject) => {
         fetch(`http://localhost:3001/users/isDuplicate/${nickname}`)
@@ -11,10 +9,10 @@ function checkDuplicateNickname(nickname) {
                 if (nickname === userNickname) {
                     isDuplicate = false;
                 }
-                resolve(isDuplicate); // 중복 여부를 Promise로 반환
+                resolve(isDuplicate);
             })
             .catch(error => {
-                reject(error); // 오류 발생 시 reject 처리
+                reject(error);
             });
     });
 }
@@ -69,7 +67,6 @@ modifyButton.addEventListener('click', function () {
     }
 });
 
-//모달
 const modalOpenButton = document.getElementById('modalOpenButton');
 const modalCloseButton = document.getElementById('modalCloseButton');
 const modal = document.getElementById('modalContainer');
@@ -96,7 +93,6 @@ agreeButton.addEventListener('click', function () {
                 throw new Error('Network response was not ok');
             }
             window.location.href = '/';
-            // return response.json();
         })
         .catch(function (error) {
             console.error(

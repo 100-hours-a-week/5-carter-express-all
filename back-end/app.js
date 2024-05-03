@@ -355,7 +355,6 @@ app.patch('/users/info/:userId', upload.single('file'), (req, res) => {
             const users = jsonData.users;
             for (let i = 0; i < users.length; i += 1) {
                 let user = users[i];
-                // console.log(user.userId);
                 if (user.userId == userId) {
                     if (req.file) {
                         fs.rename(
@@ -597,63 +596,7 @@ app.patch('/posts', upload.single('file'), (req, res) => {
         }
     });
 });
-// app.get('/posts', (req, res) => {});
-// app.get('/data.json', (req, res) => {
-//     console.log(123);
-// console.log(jsonFilePath);
 
-// fs.readFile(jsonFilePath, 'utf8', (err, data) => {
-//     if (err) {
-//         console.error('Error reading file:', err);
-//         res.status(500).send('Internal Server Error');
-//         return;
-
-//         let jsonData;
-//         try {
-//             jsonData = JSON.parse(data);
-//         } catch (parseError) {
-//             console.error('Error parsing JSON:', parseError);
-//             res.status(500).send('Internal Server Error');
-//             return;
-//         }
-//     }
-//     res.json(jsonData);
-// });
-//     res.sendFile(jsonFilePath);
-// });
-
-// app.post('/users/signup', (req, res) => {
-//     const userData = req.body;
-
-//     fs.readFile('/models/data.json', (err, data) => {
-//         if (err) {
-//             console.error(err);
-//             res.status(500).send('Internal Server Error');
-//             return;
-//         }
-
-//         let jsonData = [];
-//         if (data.length !== 0) {
-//             jsonData = JSON.parse(data);
-//         }
-
-//         jsonData.users.push(userData);
-//         fs.writeFile(
-//             '/models/data.json',
-//             JSON.stringify(jsonData, null, 2),
-//             'utf8',
-//             err => {
-//                 if (err) {
-//                     console.error(err);
-//                     res.status(500).send('Internal Server Error');
-//                     return;
-//                 }
-
-//                 res.status(200).send('User registered successfully!');
-//             },
-//         );
-//     });
-// });
 function getDate() {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
