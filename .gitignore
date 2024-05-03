@@ -143,4 +143,6 @@ uploads/
 temp/
 
 # data.json
-data.json
+posts.json
+users.json
+comments.json
