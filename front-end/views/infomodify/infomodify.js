@@ -41,6 +41,11 @@ function toast(string) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  if (!userId) {
+    alert("로그아웃되었습니다.");
+    window.location.href = "/";
+  }
+
   await fetch(`${BACKEND_IP_PORT}/users/${userId}/image`)
     .then((response) => response.blob())
     .then((blob) => {

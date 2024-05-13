@@ -30,6 +30,10 @@ function checkTitleContent() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  if (!userId) {
+    alert("로그아웃되었습니다.");
+    window.location.href = "/";
+  }
   fetch(`${BACKEND_IP_PORT}/users/${userId}/image`)
     .then((response) => response.blob())
     .then((blob) => {
