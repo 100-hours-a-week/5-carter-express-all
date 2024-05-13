@@ -138,9 +138,8 @@ typings/
 Typescript/*
 Webpack/*
 
-# uploads, temp
+# uploads
 uploads/
-temp/
 
 # data.json
 posts.json
