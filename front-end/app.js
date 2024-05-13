@@ -1,35 +1,26 @@
-const express = require('express');
-const path = require('path');
+import express from "express";
+import path from "path";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+
+import { FRONTEND_PORT } from "./port.js";
+import userRouter from "./routes/userRouter.js";
+import postRouter from "./routes/postRouter.js";
+
 const app = express();
+const __dirname = path.resolve();
 
-app.use(express.static(path.join(__dirname + '/public')));
+app.use(cookieParser());
+app.use(cors());
+app.use(express.static(__dirname + "/views"));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'login.html'));
-});
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'signup.html'));
-});
-app.get('/board/detail/:userId/:postId', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'boarddetail.html'));
-});
-app.get('/boardmodify/:userId/:postId', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'boardmodify.html'));
-});
-app.get('/boardwrite/:userId', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'boardwrite.html'));
-});
-app.get('/infomodify/:userId', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'infomodify.html'));
-});
-app.get('/board/:userId', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'board.html'));
-});
-app.get('/pwmodify/:userId', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'pwmodify.html'));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "views/login/login.html"));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
+app.use("/users", userRouter);
+app.use("/posts", postRouter);
+
+app.listen(FRONTEND_PORT, () => {
+  console.log(`서버가 실행중입니다. http://localhost:${FRONTEND_PORT}/`);
 });
