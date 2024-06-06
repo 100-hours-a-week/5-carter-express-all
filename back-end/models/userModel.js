@@ -1,187 +1,195 @@
 import fs from "fs";
 import path from "path";
+import db from "../db.js";
 
 const __dirname = path.resolve();
 const uploadPath = path.join(__dirname, "uploads/");
-const usersDataPath = "/models/users.json";
-const postsDataPath = "/models/posts.json";
-const commentsDataPath = "/models/comments.json";
 
-function validateUser(email, password) {
-  const usersJsonFile = fs.readFileSync(__dirname + usersDataPath, "utf8");
-  const usersJsonData = JSON.parse(usersJsonFile);
+async function validateUser(email, password) {
+  try {
+    const [rows] = await db.query(
+      "SELECT userId FROM users WHERE email = ? AND password = ?",
+      [email, password],
+    );
 
-  for (let i = 0; i < usersJsonData.length; i++) {
-    let user = usersJsonData[i];
-    if (user.email === email && user.password === password) {
-      return user.userId;
+    if (rows.length > 0) {
+      return rows[0].userId;
+    } else {
+      return 0;
     }
+  } catch (err) {
+    console.error("Error validating user: ", err);
+    return 0;
   }
-  return 0;
 }
 
-function validateDuplicatedEmail(email) {
-  const usersJsonFile = fs.readFileSync(__dirname + usersDataPath, "utf8");
-  const usersJsonData = JSON.parse(usersJsonFile);
+async function validateDuplicatedEmail(email) {
+  try {
+    const [rows] = await db.query(
+      "SELECT COUNT(*) AS count FROM users WHERE email = ?",
+      [email],
+    );
+    const count = rows[0].count;
 
-  for (let i = 0; i < usersJsonData.length; i++) {
-    const user = usersJsonData[i];
-    if (user.email === email) {
+    if (count > 0) {
       return true;
+    } else {
+      return false;
     }
+  } catch (err) {
+    console.error("Error validating duplicated email: ", err);
+    return false;
   }
-  return false;
 }
 
-function validateDuplicatedNickname(nickname) {
-  const usersJsonFile = fs.readFileSync(__dirname + usersDataPath, "utf8");
-  const usersJsonData = JSON.parse(usersJsonFile);
+async function validateDuplicatedNickname(nickname) {
+  try {
+    const [rows] = await db.query(
+      "SELECT COUNT(*) AS count FROM users WHERE nickname = ?",
+      [nickname],
+    );
+    const count = rows[0].count;
 
-  for (let i = 0; i < usersJsonData.length; i++) {
-    const user = usersJsonData[i];
-    if (user.nickname === nickname) {
+    if (count > 0) {
       return true;
+    } else {
+      return false;
     }
-  }
-  return false;
-}
-
-function createUser(newUser) {
-  const usersJsonFile = fs.readFileSync(__dirname + usersDataPath, "utf8");
-  const usersJsonData = JSON.parse(usersJsonFile);
-
-  const newUserId = usersJsonData.reduce((max, user) => {
-    return Math.max(max, user.userId) + 1;
-  }, 0);
-  const image = `user${newUserId}${path.extname(newUser.image)}`;
-  fs.rename(uploadPath + newUser.image, uploadPath + image, (err) => {
-    if (err) console.log(err);
-    else console.log("success");
-  });
-  const user = {
-    userId: newUserId,
-    email: newUser.email,
-    password: newUser.password,
-    nickname: newUser.nickname,
-    image: image,
-  };
-
-  usersJsonData.push(user);
-
-  const newUsersJson = JSON.stringify(usersJsonData);
-
-  fs.writeFileSync(__dirname + usersDataPath, newUsersJson, "utf8");
-}
-
-function getUser(userId) {
-  const usersJsonFile = fs.readFileSync(__dirname + usersDataPath, "utf8");
-  const usersJsonData = JSON.parse(usersJsonFile);
-
-  for (let i = 0; i < usersJsonData.length; i++) {
-    let user = usersJsonData[i];
-    if (user.userId === parseInt(userId)) {
-      return user;
-    }
+  } catch (err) {
+    console.error("Error validating duplicated nickname: ", err);
+    return false;
   }
 }
 
-function getUserId(email) {
-  const usersJsonFile = fs.readFileSync(__dirname + usersDataPath, "utf8");
-  const usersJsonData = JSON.parse(usersJsonFile);
+async function createUser(newUser) {
+  try {
+    const [result] = await db.query(
+      "INSERT INTO users (email, password, nickname, image) VALUES (?, ?, ?, ?)",
+      [newUser.email, newUser.password, newUser.nickname, ""],
+    );
 
-  for (let i = 0; i < usersJsonData.length; i++) {
-    let user = usersJsonData[i];
-    if (user.email === email) {
-      return parseInt(user.userId);
-    }
+    const newUserId = result.insertId;
+    const imageExt = path.extname(newUser.image);
+    const image = `user${newUserId}${imageExt}`;
+
+    fs.renameSync(uploadPath + newUser.image, uploadPath + image);
+
+    await db.query("UPDATE users SET image = ? WHERE userId = ?", [
+      image,
+      newUserId,
+    ]);
+
+    console.log("User created successfully");
+    return newUserId;
+  } catch (err) {
+    console.error("Error creating user: ", err);
+    throw err;
   }
 }
 
-function updateUser(user) {
-  const usersJsonFile = fs.readFileSync(__dirname + usersDataPath, "utf8");
-  const usersJsonData = JSON.parse(usersJsonFile);
+async function getUser(userId) {
+  try {
+    const [rows] = await db.query("SELECT * FROM users WHERE userId = ?", [
+      userId,
+    ]);
+    if (rows.length > 0) {
+      return rows[0];
+    } else {
+      return null;
+    }
+  } catch (err) {
+    console.error("Error retrieving user: ", err);
+    throw err;
+  }
+}
 
-  for (let i = 0; i < usersJsonData.length; i++) {
-    if (parseInt(user.userId) === parseInt(usersJsonData[i].userId)) {
-      usersJsonData[i].nickname = user.nickname;
-      if (user.image) {
-        fs.unlink(uploadPath + usersJsonData[i].image, (err) => {
+async function getUserId(email) {
+  try {
+    const [rows] = await db.query("SELECT userId FROM users WHERE email = ?", [
+      email,
+    ]);
+
+    if (rows.length > 0) {
+      return rows[0].userId;
+    } else {
+      return null;
+    }
+  } catch (err) {
+    console.error("Error retrieving user ID: ", err);
+    throw err;
+  }
+}
+
+async function updateUser(user) {
+  try {
+    await db.query("UPDATE users SET nickname = ? WHERE userId = ?", [
+      user.nickname,
+      user.userId,
+    ]);
+
+    if (user.image) {
+      const [rows] = await db.query(
+        "SELECT image FROM users WHERE userId = ?",
+        [user.userId],
+      );
+
+      if (rows.length > 0) {
+        const oldImage = rows[0].image;
+        fs.unlink(uploadPath + oldImage, (err) => {
           if (err) {
             console.error("File delete error:", err);
           } else {
             console.log("File was deleted successfully");
           }
         });
-        const newImage = `user${user.userId}${path.extname(user.image)}`;
-        fs.rename(uploadPath + user.image, uploadPath + newImage, (err) => {
-          if (err) console.log(err);
-          else console.log("success");
-        });
-        usersJsonData[i].image = newImage;
       }
-    }
-  }
 
-  const result = JSON.stringify(usersJsonData);
-  fs.writeFileSync(path.join(__dirname, usersDataPath), result, "utf8");
+      const newImage = `user${user.userId}${path.extname(user.image)}`;
+      fs.renameSync(uploadPath + user.image, uploadPath + newImage);
+
+      await db.query("UPDATE users SET image = ? WHERE userId = ?", [
+        newImage,
+        user.userId,
+      ]);
+    }
+
+    console.log("User updated successfully");
+  } catch (err) {
+    console.error("Error updating user: ", err);
+    throw err;
+  }
 }
 
-function deleteUser(userId) {
-  const usersJsonFile = fs.readFileSync(__dirname + usersDataPath, "utf8");
-  const usersJsonData = JSON.parse(usersJsonFile);
-  let filteredData = usersJsonData.filter(
-    (user) => user.userId !== parseInt(userId),
-  );
-  let deletedJsonData = JSON.stringify(filteredData);
-
-  fs.writeFileSync(
-    path.join(__dirname, usersDataPath),
-    deletedJsonData,
-    "utf8",
-  );
-
-  const commentsJsonFile = fs.readFileSync(
-    __dirname + commentsDataPath,
-    "utf8",
-  );
-  const commentsJsonData = JSON.parse(commentsJsonFile);
-  filteredData = commentsJsonData.filter(
-    (comment) => parseInt(comment.userId) !== parseInt(userId),
-  );
-  deletedJsonData = JSON.stringify(filteredData);
-
-  fs.writeFileSync(
-    path.join(__dirname, commentsDataPath),
-    deletedJsonData,
-    "utf8",
-  );
-
-  const postsJsonFile = fs.readFileSync(__dirname + postsDataPath, "utf8");
-  const postsJsonData = JSON.parse(postsJsonFile);
-  filteredData = postsJsonData.filter(
-    (post) => post.userId !== parseInt(userId),
-  );
-  deletedJsonData = JSON.stringify(filteredData);
-
-  fs.writeFileSync(
-    path.join(__dirname, postsDataPath),
-    deletedJsonData,
-    "utf8",
-  );
+async function updateUserPassword(user) {
+  try {
+    await db.query("UPDATE users SET password = ? WHERE userId = ?", [
+      user.password,
+      user.userId,
+    ]);
+    console.log("User password updated successfully");
+  } catch (err) {
+    console.error("Error updating user password: ", err);
+    throw err;
+  }
 }
 
-function updateUserPassword(user) {
-  const usersJsonFile = fs.readFileSync(__dirname + usersDataPath, "utf8");
-  const usersJsonData = JSON.parse(usersJsonFile);
+async function deleteUser(userId) {
+  try {
+    const [result] = await db.query("CALL deleteUserAndRelatedData(?)", [
+      userId,
+    ]);
 
-  for (let i = 0; i < usersJsonData.length; i++) {
-    if (parseInt(user.userId) === parseInt(usersJsonData[i].userId)) {
-      usersJsonData[i].password = user.password;
+    if (result && result.length > 0) {
+      console.log("User and related data deleted successfully");
+      return true;
+    } else {
+      console.log("User not found");
+      return false;
     }
+  } catch (err) {
+    console.error("Error deleting user and related data: ", err);
+    throw err;
   }
-
-  const result = JSON.stringify(usersJsonData);
-  fs.writeFileSync(path.join(__dirname, usersDataPath), result, "utf8");
 }
 
 export default {
@@ -192,6 +200,6 @@ export default {
   getUser,
   getUserId,
   updateUser,
-  deleteUser,
   updateUserPassword,
+  deleteUser,
 };

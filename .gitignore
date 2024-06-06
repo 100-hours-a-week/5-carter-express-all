@@ -145,3 +145,6 @@ uploads/
 posts.json
 users.json
 comments.json
+
+# config
+config/

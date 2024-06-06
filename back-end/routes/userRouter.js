@@ -29,9 +29,9 @@ router.get("/nickname/:nickname", userController.validateDuplicatedNickname);
 
 router.get("/:userId/image", userController.getUserImage);
 router.get("/:userId/nickname", userController.getUserNickname);
+router.get("/:userId/email", userController.getUserEmail);
 router.patch("/:userId", upload.single("file"), userController.updateUser);
-router.delete("/:userId", userController.deleteUser);
-
 router.patch("/:userId/password", userController.updateUserPassword);
+router.delete("/:userId", userController.deleteUser);
 
 export default router;

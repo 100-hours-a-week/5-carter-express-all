@@ -61,6 +61,7 @@ completeButton.addEventListener("click", () => {
   formData.append("content", content);
   formData.append("file", file);
   formData.append("userId", userId);
+
   fetch(`${BACKEND_IP_PORT}/posts`, {
     method: "POST",
     body: formData,

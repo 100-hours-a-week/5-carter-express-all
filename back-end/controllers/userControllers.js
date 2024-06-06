@@ -2,93 +2,153 @@ import model from "../models/userModel.js";
 
 import path from "path";
 
-function validateUser(req, res) {
-  const email = req.body.email;
-  const password = req.body.password;
+async function validateUser(req, res) {
+  try {
+    const email = req.body.email;
+    const password = req.body.password;
 
-  const id = model.validateUser(email, password);
-  if (id !== 0) {
-    res.cookie("id", id, { maxAge: 3600000, httpOnly: true });
-    res.status(200).send({ result: true, id: id });
-  } else {
-    res.status(400).send({ result: false, id: 0 });
+    const id = await model.validateUser(email, password);
+    if (id !== 0) {
+      res.cookie("id", id, { maxAge: 3600000, httpOnly: true });
+      res.status(200).send({ result: true, id: id });
+    } else {
+      res.status(400).send({ result: false, id: 0 });
+    }
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
   }
 }
 
-function validateDuplicatedEmail(req, res) {
-  const email = req.params.email;
-  const isDuplicate = model.validateDuplicatedEmail(email);
+async function validateDuplicatedEmail(req, res) {
+  try {
+    const email = req.params.email;
+    const isDuplicate = await model.validateDuplicatedEmail(email);
 
-  res.status(200).json({ isDuplicate: isDuplicate });
-}
-
-function validateDuplicatedNickname(req, res) {
-  const nickname = req.params.nickname;
-  const isDuplicate = model.validateDuplicatedNickname(nickname);
-
-  res.status(200).json({ isDuplicate: isDuplicate });
-}
-
-function updateUser(req, res) {
-  let image = "";
-  if (req.file) {
-    image = req.file.originalname;
+    res.status(200).json({ isDuplicate: isDuplicate });
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
   }
-  const user = {
-    userId: parseInt(req.params.userId),
-    nickname: req.body.nickname,
-    image: image,
-  };
-
-  model.updateUser(user);
-  res.status(204).send("update_success");
 }
 
-function deleteUser(req, res) {
-  model.deleteUser(req.params.userId);
+async function validateDuplicatedNickname(req, res) {
+  try {
+    const nickname = req.params.nickname;
+    const isDuplicate = await model.validateDuplicatedNickname(nickname);
 
-  res.status(204).send("delete_success");
+    res.status(200).json({ isDuplicate: isDuplicate });
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
+  }
 }
 
-function createUser(req, res) {
-  const newUser = {
-    email: req.body.email,
-    password: req.body.password,
-    nickname: req.body.nickname,
-    image: req.file.originalname,
-  };
+async function updateUser(req, res) {
+  try {
+    let image = "";
+    if (req.file) {
+      image = req.file.originalname;
+    }
+    const user = {
+      userId: parseInt(req.params.userId),
+      nickname: req.body.nickname,
+      image: image,
+    };
 
-  model.createUser(newUser);
-
-  res.status(201).send("sign_up_create_success");
+    await model.updateUser(user);
+    res.status(204).send("update_success");
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
+  }
 }
 
-function getUser(req, res) {
-  const user = model.getUser(req.params.userId);
-  res.json(user);
+async function deleteUser(req, res) {
+  try {
+    await model.deleteUser(req.params.userId);
+
+    res.status(204).send("delete_success");
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
+  }
 }
 
-function getUserImage(req, res) {
-  const user = model.getUser(req.params.userId);
-  const __dirname = path.resolve();
-  const filePath = path.join(__dirname, "uploads", user.image);
-  res.sendFile(filePath);
+async function createUser(req, res) {
+  try {
+    const newUser = {
+      email: req.body.email,
+      password: req.body.password,
+      nickname: req.body.nickname,
+      image: req.file.originalname,
+    };
+
+    await model.createUser(newUser);
+
+    res.status(201).send("sign_up_create_success");
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
+  }
 }
 
-function updateUserPassword(req, res) {
-  const user = {
-    userId: parseInt(req.params.userId),
-    password: req.body.password,
-  };
-
-  model.updateUserPassword(user);
-
-  res.status(204).send("update_success");
+async function getUser(req, res) {
+  try {
+    const user = await model.getUser(req.params.userId);
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
+  }
 }
 
-function getUserNickname(req, res) {
-  const user = model.getUser(req.params.userId);
-  res.json(user.nickname);
+async function getUserImage(req, res) {
+  try {
+    const user = await model.getUser(req.params.userId);
+    const __dirname = path.resolve();
+    const filePath = path.join(__dirname, "uploads", user.image);
+    res.status(200).sendFile(filePath);
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
+  }
+}
+
+async function updateUserPassword(req, res) {
+  try {
+    const user = {
+      userId: parseInt(req.params.userId),
+      password: req.body.password,
+    };
+
+    await model.updateUserPassword(user);
+
+    res.status(204).send("update_success");
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
+  }
+}
+
+async function getUserNickname(req, res) {
+  try {
+    const user = await model.getUser(req.params.userId);
+    res.status(200).json(user.nickname);
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
+  }
+}
+
+async function getUserEmail(req, res) {
+  try {
+    const user = await model.getUser(req.params.userId);
+    res.status(200).json(user.email);
+  } catch (error) {
+    console.error("error fetching user");
+    res.status(500).json({ message: "error fetching user" });
+  }
 }
 
 export default {
@@ -102,4 +162,5 @@ export default {
   updateUserPassword,
   getUserImage,
   getUserNickname,
+  getUserEmail,
 };

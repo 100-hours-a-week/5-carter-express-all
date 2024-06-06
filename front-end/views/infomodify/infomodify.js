@@ -1,6 +1,7 @@
 BACKEND_IP_PORT = localStorage.getItem("backend-ip-port");
 
 const mainTitle = document.getElementById("mainTitle");
+const emailDisplay = document.getElementById("email");
 
 const modifyButton = document.getElementById("modifyButton");
 
@@ -60,10 +61,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       nicknameInput.value = nickname;
       prevNickname = nickname;
     });
+
+  await fetch(`${BACKEND_IP_PORT}/users/${userId}/email`)
+    .then((response) => response.json())
+    .then((email) => {
+      emailDisplay.textContent = email;
+    });
 });
 
 nicknameInput.addEventListener("input", async () => {
   const nickname = nicknameInput.value;
+  nicknameHelper.textContent = "";
   if (nickname === "") nicknameHelper.textContent = "* 닉네임을 입력해주세요";
   else if (nickname.length > 10)
     nicknameHelper.textContent = "* 닉네임은 최대 10자 까지 작성 가능합니다";

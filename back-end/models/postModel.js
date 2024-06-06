@@ -1,10 +1,9 @@
 import fs from "fs";
 import path from "path";
+import db from "../db.js";
 
 const __dirname = path.resolve();
 const uploadPath = path.join(__dirname, "uploads/");
-const postsDataPath = "/models/posts.json";
-const commentsDataPath = "/models/comments.json";
 
 function getDate() {
   const currentDate = new Date();
@@ -17,202 +16,262 @@ function getDate() {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function getPosts() {
-  const postsJsonFile = fs.readFileSync(__dirname + postsDataPath, "utf8");
-  const postsJsonData = JSON.parse(postsJsonFile);
-  return postsJsonData;
+function transformDate(rows) {
+  rows.forEach((row) => {
+    row.date = new Date(row.date).toISOString().slice(0, 19).replace("T", " ");
+  });
+  return rows;
 }
 
-function getComments(postId) {
-  const commentsJsonFile = fs.readFileSync(
-    __dirname + commentsDataPath,
-    "utf8",
-  );
-  const commentsJsonData = JSON.parse(commentsJsonFile);
+async function getPosts() {
+  const query = `
+    SELECT
+        p.postId,
+        p.title,
+        p.likes,
+        p.views,
+        p.date,
+        u.nickname,
+        u.userId,
+        COUNT(c.commentId) AS comment_count
+    FROM
+        posts p
+    JOIN
+        users u ON p.userId = u.userId
+    LEFT JOIN
+        comments c ON p.postId = c.postId
+    GROUP BY
+        p.postId, p.title, p.likes, p.views, p.date, u.nickname, u.image;
+  `;
 
-  return commentsJsonData.filter(
-    (comment) => comment.postId === parseInt(postId),
-  );
+  try {
+    const [rows] = await db.query(query);
+    return transformDate(rows);
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+    throw err;
+  }
 }
 
-function deleteComment(commentId) {
-  const commentsJsonFile = fs.readFileSync(
-    __dirname + commentsDataPath,
-    "utf8",
-  );
-  const commentsJsonData = JSON.parse(commentsJsonFile);
-  const filteredData = commentsJsonData.filter(
-    (comment) => comment.commentId !== parseInt(commentId),
-  );
+async function getPost(postId) {
+  const query = `
+    SELECT
+        p.postId,
+        p.title,
+        p.content,
+        p.views,
+        p.date,
+        p.image,
+        u.nickname,
+        u.userId,
+        COUNT(c.commentId) AS comment_count
+    FROM
+        posts p
+    JOIN
+        users u ON p.userId = u.userId
+    LEFT JOIN
+        comments c ON p.postId = c.postId
+    WHERE
+        p.postId = ?
+    GROUP BY
+        p.postId, p.title, p.content, p.views, p.date, p.image, u.nickname, u.userId;
+  `;
 
-  const deletedJsonData = JSON.stringify(filteredData);
-
-  fs.writeFileSync(
-    path.join(__dirname, commentsDataPath),
-    deletedJsonData,
-    "utf8",
-  );
+  try {
+    const [rows] = await db.query(query, [postId]);
+    return rows[0];
+  } catch (err) {
+    console.error("Error fetching post:", err);
+    throw err;
+  }
 }
 
-function deletePost(postId) {
-  const postsJsonFile = fs.readFileSync(__dirname + postsDataPath, "utf8");
-  const postsJsonData = JSON.parse(postsJsonFile);
-  const filteredData = postsJsonData.filter(
-    (post) => post.postId !== parseInt(postId),
-  );
-  const deletedJsonData = JSON.stringify(filteredData);
+async function createPost(newPost) {
+  try {
+    let image = "null.png";
+    const formattedDate = getDate();
+    const [result] = await db.query(
+      "INSERT INTO posts (userId, title, image, date, content, views, likes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        newPost.userId,
+        newPost.title,
+        image,
+        formattedDate,
+        newPost.content,
+        0,
+        0,
+      ],
+    );
 
-  fs.writeFileSync(
-    path.join(__dirname, postsDataPath),
-    deletedJsonData,
-    "utf8",
-  );
-}
+    if (newPost.image) {
+      const newPostId = result.insertId;
+      const imageExt = path.extname(newPost.image);
+      const image = `post${newPostId}${imageExt}`;
 
-function createComment(newComment) {
-  const commentsJsonFile = fs.readFileSync(
-    __dirname + commentsDataPath,
-    "utf8",
-  );
-  const commentsJsonData = JSON.parse(commentsJsonFile);
+      fs.renameSync(uploadPath + newPost.image, uploadPath + image);
 
-  const commentId = commentsJsonData.reduce((max, comment) => {
-    return Math.max(max, comment.commentId) + 1;
-  }, 0);
-  const formattedDate = getDate();
-
-  const data = {
-    commentId: commentId,
-    postId: parseInt(newComment.postId),
-    userId: parseInt(newComment.userId),
-    date: formattedDate,
-    content: newComment.content,
-  };
-
-  commentsJsonData.push(data);
-
-  const newCommentsJson = JSON.stringify(commentsJsonData);
-
-  fs.writeFileSync(__dirname + commentsDataPath, newCommentsJson, "utf8");
-}
-
-function updateComment(comment) {
-  const commentsJsonFile = fs.readFileSync(
-    __dirname + commentsDataPath,
-    "utf8",
-  );
-  const commentsJsonData = JSON.parse(commentsJsonFile);
-  const formattedDate = getDate();
-
-  for (let i = 0; i < commentsJsonData.length; i++) {
-    if (
-      parseInt(commentsJsonData[i].commentId) === parseInt(comment.commentId)
-    ) {
-      commentsJsonData[i].content = comment.content;
-      commentsJsonData[i].date = formattedDate;
+      const updateQuery = `
+        UPDATE posts SET image = ? WHERE postId = ?;
+      `;
+      await db.query(updateQuery, [image, newPostId]);
     }
+
+    console.log("Post created successfully with ID:", result.insertId);
+    return result.insertId;
+  } catch (err) {
+    console.error("Error creating post: ", err);
+    throw err;
   }
-
-  const result = JSON.stringify(commentsJsonData);
-
-  fs.writeFileSync(path.join(__dirname, commentsDataPath), result, "utf8");
 }
 
-function updatePost(post) {
-  const postsJsonFile = fs.readFileSync(__dirname + postsDataPath, "utf8");
-  const postsJsonData = JSON.parse(postsJsonFile);
-  const formattedDate = getDate();
-  for (let i = 0; i < postsJsonData.length; i++) {
-    if (parseInt(post.postId) === parseInt(postsJsonData[i].postId)) {
-      postsJsonData[i].title = post.title;
-      postsJsonData[i].content = post.content;
-      postsJsonData[i].date = formattedDate;
-      if (post.image) {
-        const image = `post${post.postId}${path.extname(post.image)}`;
-        fs.rename(uploadPath + post.image, uploadPath + image, (err) => {
-          if (err) console.log(err);
-          else console.log("success");
-        });
-        postsJsonData[i].image = image;
-      }
+async function updatePost(post) {
+  try {
+    const formattedDate = getDate();
+
+    const [result] = await db.query(
+      "UPDATE posts SET title = ?, content = ?, date = ? WHERE postId = ?",
+      [post.title, post.content, formattedDate, post.postId],
+    );
+
+    if (result.affectedRows === 0) {
+      console.log("Post not found");
+      return false;
     }
-  }
 
-  const result = JSON.stringify(postsJsonData);
+    if (post.image) {
+      const image = `post${post.postId}${path.extname(post.image)}`;
+      fs.renameSync(uploadPath + post.image, uploadPath + image);
 
-  fs.writeFileSync(path.join(__dirname, postsDataPath), result);
-}
-
-function createPost(newPost) {
-  const postsJsonFile = fs.readFileSync(__dirname + postsDataPath, "utf8");
-  const postsJsonData = JSON.parse(postsJsonFile);
-
-  const newPostId = postsJsonData.reduce((max, post) => {
-    return Math.max(max, post.postId) + 1;
-  }, 0);
-  const formattedDate = getDate();
-  let image = "null.png";
-  if (newPost.image) {
-    image = `post${newPostId}${path.extname(newPost.image)}`;
-    fs.rename(uploadPath + newPost.image, uploadPath + image, (err) => {
-      if (err) console.log(err);
-      else console.log("success");
-    });
-  }
-
-  const post = {
-    postId: newPostId,
-    userId: newPost.userId,
-    title: newPost.title,
-    image: image,
-    date: formattedDate,
-    content: newPost.content,
-    views: 0,
-    likes: 0,
-  };
-
-  postsJsonData.push(post);
-
-  const newPostsJson = JSON.stringify(postsJsonData);
-
-  fs.writeFileSync(__dirname + postsDataPath, newPostsJson, "utf8");
-}
-
-function getPost(postId) {
-  const postsJsonFile = fs.readFileSync(__dirname + postsDataPath, "utf8");
-  const postsJsonData = JSON.parse(postsJsonFile);
-  for (let i = 0; i < postsJsonData.length; i++) {
-    const post = postsJsonData[i];
-    if (parseInt(post.postId) === parseInt(postId)) {
-      return post;
+      await db.query("UPDATE posts SET image = ? WHERE postId = ?", [
+        image,
+        post.postId,
+      ]);
     }
+
+    console.log("Post updated successfully");
+    return true;
+  } catch (err) {
+    console.error("Error updating post: ", err);
+    throw err;
   }
 }
 
-function getCommentsCount(postId) {
-  const commentsJsonFile = fs.readFileSync(
-    __dirname + commentsDataPath,
-    "utf8",
-  );
-  const commentsJsonData = JSON.parse(commentsJsonFile);
+async function deletePost(postId) {
+  try {
+    const [result] = await db.query("CALL deletePostAndRelatedComments(?)", [
+      postId,
+    ]);
 
-  let count = 0;
-  for (let i = 0; i < commentsJsonData.length; i++) {
-    const comment = commentsJsonData[i];
-    if (parseInt(comment.postId) === parseInt(postId)) count += 1;
+    if (result.affectedRows > 0) {
+      console.log("Post and related comments deleted successfully");
+      return true;
+    } else {
+      console.log("Post not found");
+      return false;
+    }
+  } catch (err) {
+    console.error("Error deleting post and related comments: ", err);
+    throw err;
   }
-  return count;
+}
+
+async function incrementView(postId) {
+  try {
+    const [results] = await db.query(`CALL incrementPostViews(?)`, [postId]);
+    console.log("View count incremented successfully:");
+    return true;
+  } catch (error) {
+    console.error("Error incrementing view count:", error);
+    return false;
+  }
+}
+
+async function getComments(postId) {
+  try {
+    const [rows] = await db.query("SELECT * FROM comments WHERE postId = ?", [
+      postId,
+    ]);
+
+    return transformDate(rows);
+  } catch (err) {
+    console.error("Error retrieving comments: ", err);
+    throw err;
+  }
+}
+
+async function createComment(newComment) {
+  try {
+    const formattedDate = getDate();
+
+    const [result] = await db.query(
+      "INSERT INTO comments (postId, userId, date, content) VALUES (?, ?, ?, ?)",
+      [
+        parseInt(newComment.postId),
+        parseInt(newComment.userId),
+        formattedDate,
+        newComment.content,
+      ],
+    );
+
+    console.log("Comment created successfully with ID:", result.insertId);
+    return result.insertId;
+  } catch (err) {
+    console.error("Error creating comment: ", err);
+    throw err;
+  }
+}
+
+async function updateComment(comment) {
+  try {
+    const formattedDate = getDate();
+
+    const [result] = await db.query(
+      "UPDATE comments SET content = ?, date = ? WHERE commentId = ?",
+      [comment.content, formattedDate, comment.commentId],
+    );
+
+    if (result.affectedRows > 0) {
+      console.log("Comment updated successfully");
+      return true;
+    } else {
+      console.log("Comment not found");
+      return false;
+    }
+  } catch (err) {
+    console.error("Error updating comment: ", err);
+    throw err;
+  }
+}
+
+async function deleteComment(commentId) {
+  try {
+    const [result] = await db.query(
+      "DELETE FROM comments WHERE commentId = ?",
+      [commentId],
+    );
+
+    if (result.affectedRows > 0) {
+      console.log("Comment deleted successfully");
+      return true;
+    } else {
+      console.log("Comment not found");
+      return false;
+    }
+  } catch (err) {
+    console.error("Error deleting comment: ", err);
+    throw err;
+  }
 }
 
 export default {
   getPosts,
-  createPost,
   getPost,
-  getComments,
-  deletePost,
+  createPost,
   updatePost,
+  deletePost,
+  incrementView,
+  getComments,
   createComment,
-  deleteComment,
   updateComment,
-  getCommentsCount,
+  deleteComment,
 };

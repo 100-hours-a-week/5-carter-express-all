@@ -23,7 +23,6 @@ function transformLikes(number) {
 
 function displayPosts(posts) {
   const postContainer = document.getElementById("post-container");
-
   posts.forEach(async (post, index) => {
     const container = document.createElement("div");
     container.classList.add("my-box");
@@ -31,36 +30,31 @@ function displayPosts(posts) {
     container.postId = post.postId;
     container.style.top = `calc(300px + ${index * 180}px)`;
 
-    let url;
-    let nickname;
+    const nickname = post.nickname;
 
+    let url;
     await fetch(`${BACKEND_IP_PORT}/users/${post.userId}/image`)
       .then((response) => response.blob())
       .then((blob) => {
         url = URL.createObjectURL(blob);
       });
 
-    await fetch(`${BACKEND_IP_PORT}/users/${post.userId}/nickname`)
-      .then((response) => response.json())
-      .then((data) => {
-        nickname = data;
-      });
-
     post.likes = transformLikes(post.likes);
-    post.comments = transformLikes(post.comments);
+    post.count_comment = transformLikes(post.comment_count);
     post.views = transformLikes(post.views);
 
     container.innerHTML = `
-                    <div class="title" >${post.title}</div>
-                    <div class="like" >좋아요 ${post.likes} 댓글 ${post.comments} 조회수 ${post.views}</div>
-                    <div class="date" >${post.date}</div>
-                    <hr />
-                    <div class="user"><img class="profile" src="${url}" /> <div class="author" >${nickname}</div></div>
-                    `;
+      <div class="title">${post.title}</div>
+      <div class="like">좋아요 ${post.likes} 댓글 ${post.count_comment} 조회수 ${post.views}</div>
+      <div class="date">${post.date}</div>
+      <hr />
+      <div class="user"><img class="profile" src="${url}" /> <div class="author">${nickname}</div></div>
+    `;
 
-    container.addEventListener("click", () => {
+    container.addEventListener("click", async () => {
       window.location.href = `/posts/detail/:${container.postId}`;
     });
+
     postContainer.appendChild(container);
   });
 }

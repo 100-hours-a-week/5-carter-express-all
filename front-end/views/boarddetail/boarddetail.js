@@ -60,17 +60,17 @@ async function displayPostDetail(data) {
   postDate.textContent = data.date;
   postContent.textContent = data.content;
   views.textContent = transformNumber(data.views);
+  authorName.textContent = data.nickname;
 
-  let commentCount;
-
-  await fetch(`${BACKEND_IP_PORT}/posts/comments/${postId}/count`)
-    .then((response) => response.json())
-    .then((data) => {
-      commentCount = data;
-    });
-
-  comments.textContent = transformNumber(commentCount);
+  comments.textContent = transformNumber(data.comment_count);
   authorId = data.userId;
+
+  await fetch(`${BACKEND_IP_PORT}/users/${authorId}/image`)
+    .then((response) => response.blob())
+    .then((blob) => {
+      const url = URL.createObjectURL(blob);
+      authorProfile.src = url;
+    });
 
   await fetch(`${BACKEND_IP_PORT}/posts/${postId}/image`)
     .then((response) => response.blob())
@@ -84,12 +84,6 @@ async function displayPostDetail(data) {
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       authorProfile.src = url;
-    });
-
-  await fetch(`${BACKEND_IP_PORT}/users/${authorId}/nickname`)
-    .then((response) => response.json())
-    .then((data) => {
-      authorName.textContent = data;
     });
 }
 
@@ -190,12 +184,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     alert("로그아웃되었습니다.");
     window.location.href = "/";
   }
+
   await fetch(`${BACKEND_IP_PORT}/users/${userId}/image`)
     .then((response) => response.blob())
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       profileImage.src = url;
     });
+
+  await fetch(`${BACKEND_IP_PORT}/posts/${postId}/increment-view`, {
+    method: "PATCH",
+  });
 
   await fetch(`${BACKEND_IP_PORT}/posts/${postId}`)
     .then((response) => response.json())
@@ -281,3 +280,14 @@ postModifyButton.addEventListener("click", () => {
 mainTitle.addEventListener("click", () => {
   window.location.href = "/posts/";
 });
+
+function getDate() {
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+  const day = String(currentDate.getDate()).padStart(2, "0");
+  const hours = String(currentDate.getHours()).padStart(2, "0");
+  const minutes = String(currentDate.getMinutes()).padStart(2, "0");
+  const seconds = String(currentDate.getSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
