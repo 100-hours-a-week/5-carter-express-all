@@ -8,7 +8,31 @@ const passwordMessage = document.getElementById("passwordHelper");
 const confirmPasswordInput = document.getElementById("confirmInput");
 const confirmPasswordMessage = document.getElementById("confirmPasswordHelper");
 
-const userId = sessionStorage.getItem("user");
+const fetchWrapper = (url, options = {}) => {
+  return fetch(url, {
+    ...options,
+    credentials: "include",
+  });
+};
+
+const logout = async () => {
+  try {
+    const response = await fetchWrapper(`${BACKEND_IP_PORT}/users/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      console.log("Logout successful");
+      window.location.href = "/";
+    } else {
+      throw new Error("Logout failed");
+    }
+  } catch (error) {
+    console.error("Error logging out:", error);
+  }
+};
 
 function toggleDropdown() {
   const dropdownContent = document.getElementById("menu-box");
@@ -82,17 +106,17 @@ const pwInputChange = () => {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (!userId) {
-    alert("로그아웃되었습니다.");
-    window.location.href = "/";
-  }
-
-  await fetch(`${BACKEND_IP_PORT}/users/${userId}/image`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/users/image`)
     .then((response) => response.blob())
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       profileImage.src = url;
     });
+});
+
+document.getElementById("logout").addEventListener("click", (event) => {
+  event.preventDefault();
+  logout();
 });
 
 passwordInput.addEventListener("input", pwInputChange);
@@ -105,7 +129,7 @@ modifyButton.addEventListener("click", async () => {
     password: password,
   };
 
-  await fetch(`${BACKEND_IP_PORT}/users/${userId}/password`, {
+  await fetchWrapper(`${BACKEND_IP_PORT}/users/password`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),

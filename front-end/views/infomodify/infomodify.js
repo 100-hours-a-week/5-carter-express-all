@@ -13,13 +13,37 @@ const modalCloseButton = document.getElementById("modalCloseButton");
 const modal = document.getElementById("modalContainer");
 const agreeButton = document.getElementById("agreeButton");
 
-const userId = sessionStorage.getItem("user");
-
 const nicknameInput = document.getElementById("nicknameInput");
 const nicknameHelper = document.getElementById("nicknameHelper");
 
 let userNickname;
 let prevNickname;
+
+const fetchWrapper = (url, options = {}) => {
+  return fetch(url, {
+    ...options,
+    credentials: "include",
+  });
+};
+
+const logout = async () => {
+  try {
+    const response = await fetchWrapper(`${BACKEND_IP_PORT}/users/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      console.log("Logout successful");
+      window.location.href = "/";
+    } else {
+      throw new Error("Logout failed");
+    }
+  } catch (error) {
+    console.error("Error logging out:", error);
+  }
+};
 
 function toggleDropdown() {
   const dropdownContent = document.getElementById("menu-box");
@@ -42,31 +66,39 @@ function toast(string) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (!userId) {
-    alert("로그아웃되었습니다.");
-    window.location.href = "/";
+  try {
+    const response = await fetchWrapper(`${BACKEND_IP_PORT}/users/image`, {});
+    if (!response.ok) {
+      throw new Error("이미지를 가져오는데 실패했습니다.");
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const profileImage = document.getElementById("profileImage");
+    const profileImageInput = document.getElementById("profileImageInput");
+
+    profileImage.src = url;
+    profileImageInput.src = url;
+  } catch (error) {
+    console.error("Error fetching user image:", error);
   }
 
-  await fetch(`${BACKEND_IP_PORT}/users/${userId}/image`)
-    .then((response) => response.blob())
-    .then((blob) => {
-      const url = URL.createObjectURL(blob);
-      profileImage.src = url;
-      profileImageInput.src = url;
-    });
-
-  await fetch(`${BACKEND_IP_PORT}/users/${userId}/nickname`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/users/nickname`)
     .then((response) => response.json())
     .then((nickname) => {
       nicknameInput.value = nickname;
       prevNickname = nickname;
     });
 
-  await fetch(`${BACKEND_IP_PORT}/users/${userId}/email`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/users/email`)
     .then((response) => response.json())
     .then((email) => {
       emailDisplay.textContent = email;
     });
+});
+
+document.getElementById("logout").addEventListener("click", (event) => {
+  event.preventDefault();
+  logout();
 });
 
 nicknameInput.addEventListener("input", async () => {
@@ -76,7 +108,7 @@ nicknameInput.addEventListener("input", async () => {
   else if (nickname.length > 10)
     nicknameHelper.textContent = "* 닉네임은 최대 10자 까지 작성 가능합니다";
   else if (nickname !== prevNickname) {
-    await fetch(`${BACKEND_IP_PORT}/users/nickname/${nickname}`)
+    await fetchWrapper(`${BACKEND_IP_PORT}/users/nickname/${nickname}`)
       .then((response) => response.json())
       .then((result) => {
         if (result.isDuplicate) {
@@ -97,7 +129,7 @@ modifyButton.addEventListener("click", async () => {
   const formData = new FormData();
   formData.append("nickname", nickname);
   formData.append("file", file);
-  fetch(`${BACKEND_IP_PORT}/users/${userId}`, {
+  fetchWrapper(`${BACKEND_IP_PORT}/users`, {
     method: "PATCH",
     body: formData,
   });
@@ -114,7 +146,7 @@ modalCloseButton.addEventListener("click", () => {
 });
 
 agreeButton.addEventListener("click", () => {
-  fetch(`${BACKEND_IP_PORT}/users/${userId}`, {
+  fetchWrapper(`${BACKEND_IP_PORT}/users`, {
     method: "DELETE",
   })
     .then((response) => {

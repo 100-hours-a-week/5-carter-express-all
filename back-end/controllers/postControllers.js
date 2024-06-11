@@ -28,7 +28,7 @@ async function createPost(req, res) {
     else image = "";
 
     const newPost = {
-      userId: parseInt(req.body.userId),
+      userId: parseInt(req.session.user.id),
       title: req.body.title,
       image: image,
       content: req.body.content,
@@ -84,6 +84,7 @@ async function incrementView(req, res) {
 async function getComments(req, res) {
   try {
     const comments = await model.getComments(req.params.postId);
+    console.log(comments);
     res.status(200).json(comments);
   } catch (error) {
     console.error("Error fetching comments:", error);
@@ -95,7 +96,7 @@ async function createComment(req, res) {
   try {
     const newComment = {
       postId: req.body.postId,
-      userId: req.body.userId,
+      userId: req.session.user.id,
       content: req.body.content,
     };
     await model.createComment(newComment);

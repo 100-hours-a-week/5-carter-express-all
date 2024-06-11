@@ -148,3 +148,6 @@ comments.json
 
 # config
 config/
+
+#env
+.env

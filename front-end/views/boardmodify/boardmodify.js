@@ -8,8 +8,33 @@ const fileInput = document.getElementById("fileInput");
 const inputTitle = document.getElementById("inputTitle");
 const inputContent = document.getElementById("inputContent");
 
-const userId = sessionStorage.getItem("user");
 const postId = getPostIdFromUrl();
+
+const fetchWrapper = (url, options = {}) => {
+  return fetch(url, {
+    ...options,
+    credentials: "include",
+  });
+};
+
+const logout = async () => {
+  try {
+    const response = await fetchWrapper(`${BACKEND_IP_PORT}/users/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      console.log("Logout successful");
+      window.location.href = "/";
+    } else {
+      throw new Error("Logout failed");
+    }
+  } catch (error) {
+    console.error("Error logging out:", error);
+  }
+};
 
 function toggleDropdown() {
   const dropdownContent = document.getElementById("menu-box");
@@ -37,24 +62,25 @@ function getPostIdFromUrl() {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-  if (!userId) {
-    alert("로그아웃되었습니다.");
-    window.location.href = "/";
-  }
-  await fetch(`${BACKEND_IP_PORT}/users/${userId}/image`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/users/image`)
     .then((response) => response.blob())
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       profileImage.src = url;
     });
 
-  await fetch(`${BACKEND_IP_PORT}/posts/${postId}`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/posts/${postId}`)
     .then((response) => response.json())
     .then((post) => {
       inputTitle.value = post.title;
       inputContent.value = post.content;
       checkTitleContent();
     });
+});
+
+document.getElementById("logout").addEventListener("click", (event) => {
+  event.preventDefault();
+  logout();
 });
 
 inputTitle.addEventListener("input", () => {
@@ -81,7 +107,7 @@ completeButton.addEventListener("click", async () => {
   formData.append("title", title);
   formData.append("content", content);
   formData.append("file", fileInput);
-  fetch(`${BACKEND_IP_PORT}/posts/${postId}`, {
+  await fetchWrapper(`${BACKEND_IP_PORT}/posts/${postId}`, {
     method: "POST",
     body: formData,
   });

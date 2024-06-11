@@ -1,9 +1,33 @@
 BACKEND_IP_PORT = localStorage.getItem("backend-ip-port");
 
-const userId = sessionStorage.getItem("user");
-
 const profileImage = document.getElementById("profileImage");
 const writeButton = document.getElementById("writeButton");
+
+const fetchWrapper = (url, options = {}) => {
+  return fetch(url, {
+    ...options,
+    credentials: "include",
+  });
+};
+
+const logout = async () => {
+  try {
+    const response = await fetchWrapper(`${BACKEND_IP_PORT}/users/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      console.log("Logout successful");
+      window.location.href = "/";
+    } else {
+      throw new Error("Logout failed");
+    }
+  } catch (error) {
+    console.error("Error logging out:", error);
+  }
+};
 
 function toggleDropdown() {
   const dropdownContent = document.getElementById("menu-box");
@@ -33,7 +57,7 @@ function displayPosts(posts) {
     const nickname = post.nickname;
 
     let url;
-    await fetch(`${BACKEND_IP_PORT}/users/${post.userId}/image`)
+    await fetchWrapper(`${BACKEND_IP_PORT}/users/${post.userId}/image`, {})
       .then((response) => response.blob())
       .then((blob) => {
         url = URL.createObjectURL(blob);
@@ -60,23 +84,24 @@ function displayPosts(posts) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (!userId) {
-    alert("로그아웃되었습니다.");
-    window.location.href = "/";
-  }
-  await fetch(`${BACKEND_IP_PORT}/users/${userId}/image`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/users/image`, {})
     .then((response) => response.blob())
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       profileImage.src = url;
     });
 
-  await fetch(`${BACKEND_IP_PORT}/posts`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/posts`, {})
     .then((response) => response.json())
     .then((data) => {
       displayPosts(data);
     })
     .catch((error) => console.error("Error fetching posts:", error));
+});
+
+document.getElementById("logout").addEventListener("click", (event) => {
+  event.preventDefault();
+  logout();
 });
 
 writeButton.onmouseover = () => (writeButton.style.backgroundColor = "#7F6AEE");

@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import db from "../db.js";
+import bcrypt from "bcryptjs";
 
 const __dirname = path.resolve();
 const uploadPath = path.join(__dirname, "uploads/");
@@ -8,14 +9,18 @@ const uploadPath = path.join(__dirname, "uploads/");
 async function validateUser(email, password) {
   try {
     const [rows] = await db.query(
-      "SELECT userId FROM users WHERE email = ? AND password = ?",
-      [email, password],
+      "SELECT userId,password FROM users WHERE email = ?",
+      [email],
     );
 
     if (rows.length > 0) {
-      return rows[0].userId;
+      const user = rows[0];
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (isMatch) {
+        return user.userId;
+      }
     } else {
-      return 0;
+      return null;
     }
   } catch (err) {
     console.error("Error validating user: ", err);
@@ -63,9 +68,12 @@ async function validateDuplicatedNickname(nickname) {
 
 async function createUser(newUser) {
   try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newUser.password, salt);
+
     const [result] = await db.query(
       "INSERT INTO users (email, password, nickname, image) VALUES (?, ?, ?, ?)",
-      [newUser.email, newUser.password, newUser.nickname, ""],
+      [newUser.email, hashedPassword, newUser.nickname, ""],
     );
 
     const newUserId = result.insertId;
@@ -162,8 +170,11 @@ async function updateUser(user) {
 
 async function updateUserPassword(user) {
   try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(user.password, salt);
+
     await db.query("UPDATE users SET password = ? WHERE userId = ?", [
-      user.password,
+      hashedPassword,
       user.userId,
     ]);
     console.log("User password updated successfully");
@@ -178,8 +189,8 @@ async function deleteUser(userId) {
     const [result] = await db.query("CALL deleteUserAndRelatedData(?)", [
       userId,
     ]);
-
-    if (result && result.length > 0) {
+    console.log(result);
+    if (result) {
       console.log("User and related data deleted successfully");
       return true;
     } else {

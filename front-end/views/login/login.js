@@ -21,14 +21,8 @@ async function validateAccount() {
 
   const response = await fetch(`${BACKEND_IP_PORT}/users/login`, data);
   const auth = await response.json();
-  return auth.id;
+  return auth.user.id;
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  sessionStorage.removeItem("user");
-  document.cookie =
-    "sessionId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -36,8 +30,6 @@ form.addEventListener("submit", async (event) => {
   validateAccount().then((id) => {
     if (id) {
       loginButton.style.backgroundColor = "#7F6AEE";
-
-      sessionStorage.setItem("user", id);
 
       setTimeout(() => {
         window.location.href = "/posts";

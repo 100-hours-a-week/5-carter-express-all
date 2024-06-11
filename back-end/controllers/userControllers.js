@@ -6,17 +6,26 @@ async function validateUser(req, res) {
   try {
     const email = req.body.email;
     const password = req.body.password;
-
-    const id = await model.validateUser(email, password);
-    if (id !== 0) {
-      res.cookie("id", id, { maxAge: 3600000, httpOnly: true });
-      res.status(200).send({ result: true, id: id });
+    const user = await model.validateUser(email, password);
+    if (user !== 0) {
+      req.session.user = { id: user };
+      res.status(200).json({ result: true, user: { id: user } });
     } else {
-      res.status(400).send({ result: false, id: 0 });
+      res
+        .status(400)
+        .json({ result: false, message: "Invalid email or password" });
     }
   } catch (error) {
-    console.error("error fetching user");
-    res.status(500).json({ message: "error fetching user" });
+    console.error("Error validating user:", error);
+    res.status(500).json({ message: "Error validating user" });
+  }
+}
+
+async function getUserId(req, res) {
+  if (req.session.user) {
+    res.status(200).json({ userId: req.session.user.id });
+  } else {
+    res.status(403).json({ message: "Unauthorized" });
   }
 }
 
@@ -51,7 +60,7 @@ async function updateUser(req, res) {
       image = req.file.originalname;
     }
     const user = {
-      userId: parseInt(req.params.userId),
+      userId: parseInt(req.session.user.id),
       nickname: req.body.nickname,
       image: image,
     };
@@ -59,18 +68,18 @@ async function updateUser(req, res) {
     await model.updateUser(user);
     res.status(204).send("update_success");
   } catch (error) {
-    console.error("error fetching user");
+    console.error("error fetching user1");
     res.status(500).json({ message: "error fetching user" });
   }
 }
 
 async function deleteUser(req, res) {
   try {
-    await model.deleteUser(req.params.userId);
+    await model.deleteUser(req.session.user.id);
 
     res.status(204).send("delete_success");
   } catch (error) {
-    console.error("error fetching user");
+    console.error("error fetching user2");
     res.status(500).json({ message: "error fetching user" });
   }
 }
@@ -88,7 +97,7 @@ async function createUser(req, res) {
 
     res.status(201).send("sign_up_create_success");
   } catch (error) {
-    console.error("error fetching user");
+    console.error("error fetching user3");
     res.status(500).json({ message: "error fetching user" });
   }
 }
@@ -98,19 +107,31 @@ async function getUser(req, res) {
     const user = await model.getUser(req.params.userId);
     res.status(200).json(user);
   } catch (error) {
-    console.error("error fetching user");
+    console.error("error fetching user4");
     res.status(500).json({ message: "error fetching user" });
   }
 }
 
 async function getUserImage(req, res) {
   try {
+    const user = await model.getUser(req.session.user.id);
+    const __dirname = path.resolve();
+    const filePath = path.join(__dirname, "uploads", user.image);
+    res.status(200).sendFile(filePath);
+  } catch (error) {
+    console.error("error fetching user5");
+    res.status(500).json({ message: "error fetching user" });
+  }
+}
+
+async function getWriterImage(req, res) {
+  try {
     const user = await model.getUser(req.params.userId);
     const __dirname = path.resolve();
     const filePath = path.join(__dirname, "uploads", user.image);
     res.status(200).sendFile(filePath);
   } catch (error) {
-    console.error("error fetching user");
+    console.error("error fetching user5");
     res.status(500).json({ message: "error fetching user" });
   }
 }
@@ -118,7 +139,7 @@ async function getUserImage(req, res) {
 async function updateUserPassword(req, res) {
   try {
     const user = {
-      userId: parseInt(req.params.userId),
+      userId: parseInt(req.session.user.id),
       password: req.body.password,
     };
 
@@ -126,33 +147,55 @@ async function updateUserPassword(req, res) {
 
     res.status(204).send("update_success");
   } catch (error) {
-    console.error("error fetching user");
+    console.error("error fetching user6");
     res.status(500).json({ message: "error fetching user" });
   }
 }
 
 async function getUserNickname(req, res) {
   try {
+    const user = await model.getUser(req.session.user.id);
+    res.status(200).json(user.nickname);
+  } catch (error) {
+    console.error("error fetching user7");
+    res.status(500).json({ message: "error fetching user" });
+  }
+}
+
+async function getWriterNickname(req, res) {
+  try {
     const user = await model.getUser(req.params.userId);
     res.status(200).json(user.nickname);
   } catch (error) {
-    console.error("error fetching user");
+    console.error("error fetching user7");
     res.status(500).json({ message: "error fetching user" });
   }
 }
 
 async function getUserEmail(req, res) {
   try {
-    const user = await model.getUser(req.params.userId);
+    const user = await model.getUser(req.session.user.id);
     res.status(200).json(user.email);
   } catch (error) {
-    console.error("error fetching user");
+    console.error("error fetching user8");
     res.status(500).json({ message: "error fetching user" });
   }
 }
 
+async function logoutUser(req, res) {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error destroying session:", err);
+      return res.status(500).json({ message: "Error logging out" });
+    }
+    res.clearCookie("connect.sid");
+    res.status(200).json({ message: "Logout successful" });
+  });
+}
+
 export default {
   validateUser,
+  getUserId,
   validateDuplicatedEmail,
   validateDuplicatedNickname,
   createUser,
@@ -161,6 +204,9 @@ export default {
   deleteUser,
   updateUserPassword,
   getUserImage,
+  getWriterImage,
   getUserNickname,
+  getWriterNickname,
   getUserEmail,
+  logoutUser,
 };

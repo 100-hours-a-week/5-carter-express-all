@@ -4,6 +4,7 @@ import multer from "multer";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
+import ensureAuthenticated from "../middleware/auth.js";
 import userController from "./../controllers/userControllers.js";
 
 const router = express.Router();
@@ -22,16 +23,29 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post("/", upload.single("file"), userController.createUser);
 router.post("/login", userController.validateUser);
+router.get("/userId", userController.getUserId);
+router.post("/", upload.single("file"), userController.createUser);
 router.get("/email/:email", userController.validateDuplicatedEmail);
 router.get("/nickname/:nickname", userController.validateDuplicatedNickname);
+router.get("/:userId/image", userController.getWriterImage);
+router.get("/:userId/nickname", userController.getWriterNickname);
 
-router.get("/:userId/image", userController.getUserImage);
-router.get("/:userId/nickname", userController.getUserNickname);
-router.get("/:userId/email", userController.getUserEmail);
-router.patch("/:userId", upload.single("file"), userController.updateUser);
-router.patch("/:userId/password", userController.updateUserPassword);
-router.delete("/:userId", userController.deleteUser);
+router.get("/image", ensureAuthenticated, userController.getUserImage);
+router.get("/nickname", ensureAuthenticated, userController.getUserNickname);
+router.get("/email", ensureAuthenticated, userController.getUserEmail);
+router.patch(
+  "/",
+  ensureAuthenticated,
+  upload.single("file"),
+  userController.updateUser,
+);
+router.patch(
+  "/password",
+  ensureAuthenticated,
+  userController.updateUserPassword,
+);
+router.delete("/", ensureAuthenticated, userController.deleteUser);
+router.post("/logout", ensureAuthenticated, userController.logoutUser);
 
 export default router;

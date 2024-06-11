@@ -9,7 +9,6 @@ const modal = document.getElementById("modalContainer");
 const inputComment = document.getElementById("commentInput");
 const submitCommentButton = document.getElementById("submitComment");
 
-const userId = sessionStorage.getItem("user");
 const postId = getPostIdFromUrl();
 
 const postTitle = document.getElementById("postTitle");
@@ -24,11 +23,59 @@ const authorName = document.getElementById("authorName");
 let authorId;
 let selectedCommentId;
 
-function postAuth() {
+const fetchWrapper = (url, options = {}) => {
+  return fetch(url, {
+    ...options,
+    credentials: "include",
+  });
+};
+
+const logout = async () => {
+  try {
+    const response = await fetchWrapper(`${BACKEND_IP_PORT}/users/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      console.log("Logout successful");
+      window.location.href = "/";
+    } else {
+      throw new Error("Logout failed");
+    }
+  } catch (error) {
+    console.error("Error logging out:", error);
+  }
+};
+
+const getUserId = async () => {
+  try {
+    const response = await fetchWrapper(`${BACKEND_IP_PORT}/users/userId`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data.userId;
+    } else {
+      throw new Error("Failed to fetch user ID");
+    }
+  } catch (error) {
+    console.error("Error fetching user ID:", error);
+    return null;
+  }
+};
+
+async function postAuth() {
+  const userId = await getUserId();
   return parseInt(userId) === parseInt(authorId);
 }
 
-function commentAuth(id) {
+async function commentAuth(id) {
+  const userId = await getUserId();
   return parseInt(userId) === parseInt(id);
 }
 
@@ -65,21 +112,21 @@ async function displayPostDetail(data) {
   comments.textContent = transformNumber(data.comment_count);
   authorId = data.userId;
 
-  await fetch(`${BACKEND_IP_PORT}/users/${authorId}/image`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/users/${authorId}/image`)
     .then((response) => response.blob())
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       authorProfile.src = url;
     });
 
-  await fetch(`${BACKEND_IP_PORT}/posts/${postId}/image`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/posts/${postId}/image`)
     .then((response) => response.blob())
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       postImageSrc.src = url;
     });
 
-  await fetch(`${BACKEND_IP_PORT}/users/${authorId}/image`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/users/${authorId}/image`)
     .then((response) => response.blob())
     .then((blob) => {
       const url = URL.createObjectURL(blob);
@@ -100,13 +147,13 @@ async function displayComments(data) {
     let nickname;
     let imageUrl;
 
-    await fetch(`${BACKEND_IP_PORT}/users/${reply.userId}/nickname`)
+    await fetchWrapper(`${BACKEND_IP_PORT}/users/${reply.userId}/nickname`)
       .then((response) => response.json())
       .then((data) => {
         nickname = data;
       });
 
-    await fetch(`${BACKEND_IP_PORT}/users/${reply.userId}/image`)
+    await fetchWrapper(`${BACKEND_IP_PORT}/users/${reply.userId}/image`)
       .then((response) => response.blob())
       .then((blob) => {
         const url = URL.createObjectURL(blob);
@@ -129,13 +176,15 @@ async function displayComments(data) {
     postContainer.appendChild(container);
   }
 
-  document.addEventListener("click", (event) => {
+  document.addEventListener("click", async (event) => {
     const buttons = document.querySelectorAll(".replyEdit");
-    buttons.forEach((button, index) => {
+    for (let index = 0; index < buttons.length; index++) {
+      const button = buttons[index];
       if (button === event.target) {
         const eB = event.target.closest(".replyEdit");
         const id = eB.dataset.userId;
-        if (commentAuth(id)) {
+
+        if (await commentAuth(id)) {
           const content = document.getElementById(`${index}content`);
           const comment = document.getElementById("commentInput");
           const submitComment = document.getElementById("submitComment");
@@ -146,7 +195,7 @@ async function displayComments(data) {
           alert("수정 권한이 없습니다");
         }
       }
-    });
+    }
   });
 
   let commentToDeleteId;
@@ -156,9 +205,9 @@ async function displayComments(data) {
   const cagreeButton = document.getElementById("cagreeButton");
 
   cmodalOpenButtons.forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const id = button.dataset.userId;
-      if (commentAuth(id)) {
+      if (await commentAuth(id)) {
         commentToDeleteId = button.dataset.commentId;
         cmodalContainer.classList.remove("hidden");
       } else {
@@ -173,37 +222,32 @@ async function displayComments(data) {
 
   cagreeButton.addEventListener("click", () => {
     location.reload();
-    fetch(`${BACKEND_IP_PORT}/posts/comments/${commentToDeleteId}`, {
+    fetchWrapper(`${BACKEND_IP_PORT}/posts/comments/${commentToDeleteId}`, {
       method: "DELETE",
     });
   });
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (!userId) {
-    alert("로그아웃되었습니다.");
-    window.location.href = "/";
-  }
-
-  await fetch(`${BACKEND_IP_PORT}/users/${userId}/image`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/users/image`)
     .then((response) => response.blob())
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       profileImage.src = url;
     });
 
-  await fetch(`${BACKEND_IP_PORT}/posts/${postId}/increment-view`, {
+  await fetchWrapper(`${BACKEND_IP_PORT}/posts/${postId}/increment-view`, {
     method: "PATCH",
   });
 
-  await fetch(`${BACKEND_IP_PORT}/posts/${postId}`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/posts/${postId}`)
     .then((response) => response.json())
     .then((data) => {
       displayPostDetail(data);
     })
     .catch((error) => console.error("Error fetching posts:", error));
 
-  await fetch(`${BACKEND_IP_PORT}/posts/comments/${postId}`)
+  await fetchWrapper(`${BACKEND_IP_PORT}/posts/comments/${postId}`)
     .then((response) => response.json())
     .then((data) => {
       displayComments(data);
@@ -211,8 +255,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     .catch((error) => console.error("Error fetching data:", error));
 });
 
-modalOpenButton.addEventListener("click", () => {
-  if (postAuth()) {
+document.getElementById("logout").addEventListener("click", (event) => {
+  event.preventDefault();
+  logout();
+});
+
+modalOpenButton.addEventListener("click", async () => {
+  if (await postAuth()) {
     modal.classList.remove("hidden");
   } else {
     alert("삭제 권한이 없습니다");
@@ -225,7 +274,7 @@ modalCloseButton.addEventListener("click", () => {
 
 const agreeButton = document.getElementById("agreeButton");
 agreeButton.addEventListener("click", async function () {
-  fetch(`${BACKEND_IP_PORT}/posts/${postId}`, {
+  fetchWrapper(`${BACKEND_IP_PORT}/posts/${postId}`, {
     method: "DELETE",
   });
   window.location.href = "/posts";
@@ -246,12 +295,10 @@ submitCommentButton.addEventListener("click", async () => {
   location.reload();
   if (submitCommentButton.textContent === "댓글 등록") {
     const data = {
-      userId: userId,
       postId: postId,
       content: inputComment.value,
     };
-
-    await fetch(`${BACKEND_IP_PORT}/posts/comments`, {
+    await fetchWrapper(`${BACKEND_IP_PORT}/posts/comments`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -259,18 +306,21 @@ submitCommentButton.addEventListener("click", async () => {
       body: JSON.stringify(data),
     });
   } else if (submitCommentButton.textContent === "댓글 수정") {
-    await fetch(`${BACKEND_IP_PORT}/posts/comments/${selectedCommentId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
+    await fetchWrapper(
+      `${BACKEND_IP_PORT}/posts/comments/${selectedCommentId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content: inputComment.value }),
       },
-      body: JSON.stringify({ content: inputComment.value }),
-    });
+    );
   }
 });
 
-postModifyButton.addEventListener("click", () => {
-  if (postAuth()) {
+postModifyButton.addEventListener("click", async () => {
+  if (await postAuth()) {
     window.location.href = `/posts/modify/${postId}`;
   } else {
     alert("수정 권한이 없습니다");
@@ -280,14 +330,3 @@ postModifyButton.addEventListener("click", () => {
 mainTitle.addEventListener("click", () => {
   window.location.href = "/posts/";
 });
-
-function getDate() {
-  const currentDate = new Date();
-  const year = currentDate.getFullYear();
-  const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-  const day = String(currentDate.getDate()).padStart(2, "0");
-  const hours = String(currentDate.getHours()).padStart(2, "0");
-  const minutes = String(currentDate.getMinutes()).padStart(2, "0");
-  const seconds = String(currentDate.getSeconds()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}

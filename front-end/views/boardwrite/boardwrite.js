@@ -2,14 +2,38 @@ BACKEND_IP_PORT = localStorage.getItem("backend-ip-port");
 
 const mainTitle = document.getElementById("mainTitle");
 
-const userId = sessionStorage.getItem("user");
-
 const inputTitle = document.getElementById("inputTitle");
 const inputContent = document.getElementById("inputContent");
 const cButton = document.getElementById("completeButton");
 const helperText = document.getElementById("helperText");
 const fileInput = document.getElementById("fileInput");
 const fileNameDisplay = document.getElementById("fileName");
+
+const fetchWrapper = (url, options = {}) => {
+  return fetch(url, {
+    ...options,
+    credentials: "include",
+  });
+};
+
+const logout = async () => {
+  try {
+    const response = await fetchWrapper(`${BACKEND_IP_PORT}/users/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      console.log("Logout successful");
+      window.location.href = "/";
+    } else {
+      throw new Error("Logout failed");
+    }
+  } catch (error) {
+    console.error("Error logging out:", error);
+  }
+};
 
 function toggleDropdown() {
   const dropdownContent = document.getElementById("menu-box");
@@ -30,16 +54,17 @@ function checkTitleContent() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (!userId) {
-    alert("로그아웃되었습니다.");
-    window.location.href = "/";
-  }
-  fetch(`${BACKEND_IP_PORT}/users/${userId}/image`)
+  fetchWrapper(`${BACKEND_IP_PORT}/users/image`)
     .then((response) => response.blob())
     .then((blob) => {
       const url = URL.createObjectURL(blob);
       profileImage.src = url;
     });
+});
+
+document.getElementById("logout").addEventListener("click", (event) => {
+  event.preventDefault();
+  logout();
 });
 
 inputTitle.addEventListener("input", () => {
@@ -50,7 +75,7 @@ inputContent.addEventListener("input", () => {
   checkTitleContent();
 });
 
-completeButton.addEventListener("click", () => {
+completeButton.addEventListener("click", async () => {
   const title = document.getElementById("inputTitle").value;
   const content = document.getElementById("inputContent").value;
   const fileInput = document.getElementById("fileInput");
@@ -60,9 +85,8 @@ completeButton.addEventListener("click", () => {
   formData.append("title", title);
   formData.append("content", content);
   formData.append("file", file);
-  formData.append("userId", userId);
 
-  fetch(`${BACKEND_IP_PORT}/posts`, {
+  fetchWrapper(`${BACKEND_IP_PORT}/posts`, {
     method: "POST",
     body: formData,
   })
